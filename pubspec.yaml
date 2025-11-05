@@ -55,6 +55,11 @@ flutter:
   assets:
     - assets/images/sylo.png
     - assets/images/logo.png
+    - assets/images/enterName.png
+    - assets/images/settings.png
+    - assets/images/settings.png
+
+  
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
