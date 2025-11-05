@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
-import 'home_page.dart';
+import 'login_page.dart';
 // You can remove this import if you don't need to navigate anywhere yet,
 // or keep it if you want to navigate to a placeholder.
 // For now, let's keep a placeholder navigation for demonstration.
@@ -55,7 +55,7 @@ class LaunchScreen extends StatelessWidget {
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const HomePage(),
+                          builder: (context) => const LoginPage(),
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
