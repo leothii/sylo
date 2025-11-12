@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import 'home_page.dart';
+import 'settings_overlay.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -34,8 +35,34 @@ class _LoginPageState extends State<LoginPage> {
       body: SafeArea(
         child: Stack(
           children: [
-           
-            // Logo "sylo" at top
+            Positioned(
+              right: 18,
+              top: 28,
+              child: IconButton(
+                icon: Image.asset(
+                  'assets/icons/settings.png',
+                  height: 36,
+                  width: 36,
+                ),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return const SettingsOverlay();
+                    },
+                  );
+                },
+              ),
+            ),
+            Positioned(
+              right: 18,
+              top: 92,
+              child: Image.asset(
+                'assets/icons/sound.png',
+                height: 36,
+                width: 36,
+              ),
+            ),
             Positioned(
               left: 0,
               right: 0,
@@ -56,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
                               offset: const Offset(0, 4),
                               blurRadius: 4,
                               color: const Color(0xFF000000).withOpacity(0.25),
-                            )
+                            ),
                           ],
                         ),
                       ),
@@ -72,7 +99,7 @@ class _LoginPageState extends State<LoginPage> {
                               offset: const Offset(0, 4),
                               blurRadius: 4,
                               color: const Color(0xFF000000).withOpacity(0.25),
-                            )
+                            ),
                           ],
                         ),
                       ),
@@ -81,8 +108,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
-
-            // Quote mark
             Positioned(
               left: 100,
               top: 259,
@@ -96,8 +121,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
-
-            // Owl Image
             Positioned(
               left: 92,
               top: 229,
@@ -110,8 +133,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
-
-            // "Please enter your:" text (kept above owl visually)
             Positioned(
               left: 92,
               top: 323.62,
@@ -127,8 +148,6 @@ class _LoginPageState extends State<LoginPage> {
                 textAlign: TextAlign.left,
               ),
             ),
-
-            // Name TextField
             Positioned(
               left: 108,
               top: 443,
@@ -166,8 +185,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
-
-            // Role Dropdown
             Positioned(
               left: 108,
               top: 502,
@@ -213,13 +230,13 @@ class _LoginPageState extends State<LoginPage> {
                     items: ['student', 'teacher', 'professional']
                         .map(
                           (String value) => DropdownMenuItem<String>(
-                        value: value,
-                        child: Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: Text(value),
-                        ),
-                      ),
-                    )
+                            value: value,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 10),
+                              child: Text(value),
+                            ),
+                          ),
+                        )
                         .toList(),
                     onChanged: (String? newValue) {
                       setState(() {
@@ -230,8 +247,6 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
-
-            // Continue Button
             Positioned(
               left: 126,
               top: 584,
@@ -249,7 +264,7 @@ class _LoginPageState extends State<LoginPage> {
                       blurRadius: 4,
                       offset: Offset(0, 4),
                       spreadRadius: 0,
-                    )
+                    ),
                   ],
                 ),
                 child: Material(
@@ -284,4 +299,3 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
-
