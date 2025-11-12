@@ -1,9 +1,9 @@
 // lib/screens/login_page.dart
 
 import 'package:flutter/material.dart';
-import '../utils/app_colors.dart'; // Make sure this path is correct
+import '../utils/app_colors.dart';
+import 'home_page.dart';
 
-// Your LoginPage is unchanged
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -29,155 +29,274 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    const Color inputFieldColor = Color(0xFFF0F0F0);
-    const Color hintColor = Colors.grey;
-    const Color inputTextColor = Colors.black;
-
     return Scaffold(
-      backgroundColor: AppColors.primaryBackground,
+      backgroundColor: const Color(0xFF8AABC7),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // --- Settings Icon (Top Right) ---
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  IconButton(
-                    icon: Image.asset(
-                      'assets/images/settings.png',
-                      height: 30,
-                      width: 30,
+        child: Stack(
+          children: [
+            // Settings Icon (Top Right)
+            Positioned(
+              right: 18,
+              top: 28,
+              child: IconButton(
+                icon: Image.asset(
+                  'assets/icons/settings.png',
+                  height: 36,
+                  width: 36,
+                ),
+                onPressed: () {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return const SettingsOverlay();
+                    },
+                  );
+                },
+              ),
+            ),
+
+            // Logo "sylo" at top
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 215,
+              child: Center(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'sy',
+                        style: TextStyle(
+                          color: const Color(0xFF882124),
+                          fontSize: 42,
+                          fontFamily: 'Bungee',
+                          fontWeight: FontWeight.w400,
+                          shadows: [
+                            Shadow(
+                              offset: const Offset(0, 4),
+                              blurRadius: 4,
+                              color: const Color(0xFF000000).withOpacity(0.25),
+                            )
+                          ],
+                        ),
+                      ),
+                      TextSpan(
+                        text: 'lo',
+                        style: TextStyle(
+                          color: const Color(0xFFF1F1F1),
+                          fontSize: 42,
+                          fontFamily: 'Bungee',
+                          fontWeight: FontWeight.w400,
+                          shadows: [
+                            Shadow(
+                              offset: const Offset(0, 4),
+                              blurRadius: 4,
+                              color: const Color(0xFF000000).withOpacity(0.25),
+                            )
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Quote mark
+            Positioned(
+              left: 100,
+              top: 259,
+              child: Text(
+                '"',
+                style: TextStyle(
+                  color: const Color(0xFFF7DB9F),
+                  fontSize: 96,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+
+            // "Please enter your:" text
+            Positioned(
+              left: 92,
+              top: 323.62,
+              child: Text(
+                'Please enter your:',
+                style: TextStyle(
+                  color: const Color(0xFFF7DB9F),
+                  fontSize: 22,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+
+            // Owl Image
+            Positioned(
+              left: 92,
+              top: 229,
+              child: SizedBox(
+                width: 273,
+                height: 273,
+                child: Image.asset(
+                  'assets/images/sylo.png',
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+
+            // Name TextField
+            Positioned(
+              left: 108,
+              top: 443,
+              child: Container(
+                width: 163,
+                height: 33,
+                decoration: ShapeDecoration(
+                  color: const Color(0xFFF1F1F1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                ),
+                child: TextField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    hintText: 'name',
+                    hintStyle: const TextStyle(
+                      color: Color(0xFFB1B1B1),
+                      fontSize: 16,
+                      fontFamily: 'Quicksand',
+                      fontWeight: FontWeight.w600,
                     ),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          // This opens the original SettingsOverlay
-                          return const SettingsOverlay();
-                        },
-                      );
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                  ),
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontFamily: 'Quicksand',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+
+            // Role Dropdown
+            Positioned(
+              left: 108,
+              top: 502,
+              child: Container(
+                width: 163,
+                height: 33,
+                decoration: ShapeDecoration(
+                  color: const Color(0xFFF1F1F1),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedRole,
+                    isExpanded: true,
+                    hint: const Padding(
+                      padding: EdgeInsets.only(left: 10),
+                      child: Text(
+                        'student',
+                        style: TextStyle(
+                          color: Color(0xFFB1B1B1),
+                          fontSize: 16,
+                          fontFamily: 'Quicksand',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    dropdownColor: const Color(0xFFF1F1F1),
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontFamily: 'Quicksand',
+                      fontWeight: FontWeight.w600,
+                    ),
+                    icon: const Padding(
+                      padding: EdgeInsets.only(right: 8),
+                      child: Icon(
+                        Icons.arrow_drop_down,
+                        color: Color(0xFFB1B1B1),
+                      ),
+                    ),
+                    items: ['student', 'teacher', 'professional']
+                        .map(
+                          (String value) => DropdownMenuItem<String>(
+                        value: value,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: Text(value),
+                        ),
+                      ),
+                    )
+                        .toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedRole = newValue;
+                      });
                     },
                   ),
-                ],
+                ),
               ),
+            ),
 
-              const Spacer(flex: 2),
-
-              // --- Logo (Centered) ---
-              Image.asset(
-                'assets/images/logo.png',
-                height: 50, // Adjust size to match Figma
-              ),
-              const SizedBox(height: 10),
-
-              // --- Stack with TextField and Owl ---
-              Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.bottomCenter,
-                children: [
-                  // --- LAYER 1: The TextField ---
-                  SizedBox(
-                    width: 200,
-                    child: TextField(
-                      controller: _nameController,
-                      textAlign: TextAlign.left,
-                      decoration: InputDecoration(
-                        hintText: 'name',
-                        hintStyle: const TextStyle(
-                          color: hintColor,
-                          fontSize: 18,
-                        ),
-                        filled: true,
-                        fillColor: inputFieldColor,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 15,
-                        ),
-                      ),
-                      style: const TextStyle(
-                        color: inputTextColor,
-                        fontSize: 18,
-                      ),
-                    ),
-                  ),
-
-                  // --- LAYER 2: The Owl (on top) ---
-                  IgnorePointer(
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 0),
-                      child: Image.asset('assets/images/sylo.png', height: 230),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // --- The Dropdown ---
-              SizedBox(
-                width: 200, // Same width as the TextField
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: inputFieldColor,
+            // Continue Button
+            Positioned(
+              left: 126,
+              top: 584,
+              child: Container(
+                width: 116.85,
+                height: 38,
+                decoration: ShapeDecoration(
+                  color: const Color(0xFFF6DA9F),
+                  shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedRole,
-                      isExpanded: true,
-                      hint: const Text(
-                        'student',
-                        style: TextStyle(color: hintColor, fontSize: 18),
+                  shadows: const [
+                    BoxShadow(
+                      color: Color(0x3F000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 4),
+                      spreadRadius: 0,
+                    )
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => const HomePage(),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: const Center(
+                      child: Text(
+                        'continue',
+                        style: TextStyle(
+                          color: Color(0xFF882124),
+                          fontSize: 22,
+                          fontFamily: 'Quicksand',
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                      dropdownColor: inputFieldColor,
-                      style: const TextStyle(
-                        color: inputTextColor,
-                        fontSize: 18,
-                      ),
-                      icon: const Icon(Icons.arrow_drop_down, color: hintColor),
-                      items: ['student', 'teacher', 'professional']
-                          .map(
-                            (String value) => DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedRole = newValue;
-                        });
-                      },
                     ),
                   ),
                 ),
               ),
-              const Spacer(flex: 3),
-
-              // --- Bottom Icons ---
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.headset, color: Colors.white, size: 30),
-                  SizedBox(width: 40),
-                  Icon(Icons.lightbulb_outline, color: Colors.white, size: 30),
-                  SizedBox(width: 40),
-                  Icon(Icons.assignment, color: Colors.white, size: 30),
-                ],
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -243,22 +362,18 @@ class SettingsOverlay extends StatelessWidget {
                     'home',
                     const Color(0xFFF7DB9F),
                     const Color(0xFF8B0000),
-                    () {
+                        () {
                       print('Home button pressed!');
                     },
                   ),
                   const SizedBox(height: 15),
-
-                  // 🚨🚨🚨 THIS 'language' BUTTON IS NOW UPDATED 🚨🚨🚨
                   _buildOverlayButton(
                     context,
                     'language',
                     const Color(0xFFF7DB9F),
                     const Color(0xFF8B0000),
-                    () {
-                      // 1. Close the current settings overlay
+                        () {
                       Navigator.of(context).pop();
-                      // 2. Show the new language overlay
                       showDialog(
                         context: context,
                         builder: (context) => const LanguageOverlay(),
@@ -271,7 +386,7 @@ class SettingsOverlay extends StatelessWidget {
                     'about',
                     const Color(0xFFF7DB9F),
                     const Color(0xFF8B0000),
-                    () {
+                        () {
                       print('About button pressed!');
                     },
                   ),
@@ -281,7 +396,7 @@ class SettingsOverlay extends StatelessWidget {
                     'exit',
                     const Color(0xFF882225),
                     Colors.white,
-                    () {
+                        () {
                       print('Exit button pressed!');
                     },
                   ),
@@ -290,9 +405,9 @@ class SettingsOverlay extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: -30, // Moves the owl up
+            top: -30,
             child: Image.asset(
-              'assets/images/sylo.png', // Your owl image
+              'assets/images/sylo.png',
               height: 120,
             ),
           ),
@@ -301,14 +416,13 @@ class SettingsOverlay extends StatelessWidget {
     );
   }
 
-  // Helper method (unchanged)
   Widget _buildOverlayButton(
-    BuildContext context,
-    String text,
-    Color backgroundColor,
-    Color textColor,
-    VoidCallback onPressed,
-  ) {
+      BuildContext context,
+      String text,
+      Color backgroundColor,
+      Color textColor,
+      VoidCallback onPressed,
+      ) {
     return SizedBox(
       width: double.infinity,
       height: 45,
@@ -337,7 +451,7 @@ class SettingsOverlay extends StatelessWidget {
 }
 
 //
-// ----------------- YOUR NEW LANGUAGE OVERLAY -----------------
+// ----------------- YOUR LANGUAGE OVERLAY (UNCHANGED) -----------------
 //
 class LanguageOverlay extends StatefulWidget {
   const LanguageOverlay({super.key});
@@ -463,12 +577,8 @@ class _LanguageOverlayState extends State<LanguageOverlay> {
     );
   }
 
-  // Helper for the 'cancel' and 'save' buttons
   Widget _buildBottomButton(String text, Color bgColor, Color textColor) {
-    // 🚨🚨🚨 THE FIX IS HERE 🚨🚨🚨
-    // We check the text and set the font size accordingly
     final double fontSize = (text == 'cancel') ? 14 : 16;
-    // 🚨🚨🚨 END OF FIX 🚨🚨🚨
 
     return SizedBox(
       width: 80,
@@ -491,11 +601,11 @@ class _LanguageOverlayState extends State<LanguageOverlay> {
         child: Text(
           text,
           style: TextStyle(
-            fontSize: fontSize, // Use the new variable here
+            fontSize: fontSize,
             fontWeight: FontWeight.bold,
             color: textColor,
           ),
-          softWrap: false, // Prevents text from wrapping
+          softWrap: false,
         ),
       ),
     );
