@@ -1,10 +1,12 @@
 // lib/screens/home_page.dart
 
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
 import '../utils/app_colors.dart';
+import '../widgets/audio_card.dart';
 import 'settings_overlay.dart';
+import 'summary_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -14,7 +16,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  double _progressValue = 0.3;
   final TextEditingController _interestController = TextEditingController();
   String? _selectedFileName;
 
@@ -29,7 +30,10 @@ class _HomePageState extends State<HomePage> {
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 20,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -58,10 +62,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _openSettingsOverlay() {
-    showDialog(
-      context: context,
-      builder: (context) => const SettingsOverlay(),
-    );
+    showDialog(context: context, builder: (context) => const SettingsOverlay());
   }
 
   Widget _buildTopBar() {
@@ -70,15 +71,9 @@ class _HomePageState extends State<HomePage> {
       children: [
         Column(
           children: [
-            _IconBadge(
-              assetPath: 'assets/icons/profile.png',
-              size: 44,
-            ),
+            _IconBadge(assetPath: 'assets/icons/profile.png', size: 44),
             const SizedBox(height: 18),
-            _IconBadge(
-              assetPath: 'assets/icons/note.png',
-              size: 44,
-            ),
+            _IconBadge(assetPath: 'assets/icons/note.png', size: 44),
           ],
         ),
         const Spacer(),
@@ -90,10 +85,7 @@ class _HomePageState extends State<HomePage> {
               onTap: _openSettingsOverlay,
             ),
             const SizedBox(height: 18),
-            _IconBadge(
-              assetPath: 'assets/icons/sound.png',
-              size: 44,
-            ),
+            _IconBadge(assetPath: 'assets/icons/sound.png', size: 44),
           ],
         ),
       ],
@@ -146,12 +138,19 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 28),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: const [
+                    children: [
                       _ActionButton(
                         label: 'analyze',
                         icon: Icons.lightbulb_outline,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => const SummaryPage(),
+                            ),
+                          );
+                        },
                       ),
-                      _ActionButton(
+                      const _ActionButton(
                         label: 'try quiz',
                         icon: Icons.help_outline,
                       ),
@@ -229,127 +228,57 @@ class _HomePageState extends State<HomePage> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: const [
-        _ShortcutIcon(icon: Icons.headset),
-        SizedBox(width: 32),
-        _ShortcutIcon(icon: Icons.lightbulb_outline),
-        SizedBox(width: 32),
-        _ShortcutIcon(icon: Icons.menu_book_outlined),
+        _ShortcutIcon(
+          icon: Icons.headset,
+          color: Color(0xFFF2F2F2),
+          margin: EdgeInsets.only(right: 32),
+        ),
+        _ShortcutIcon(
+          icon: Icons.lightbulb_outline,
+          color: Color(0xFFF2F2F2),
+          margin: EdgeInsets.only(right: 32),
+        ),
+        _ShortcutIcon(icon: Icons.menu_book_outlined, color: Color(0xFFF2F2F2)),
       ],
     );
   }
 
   Widget _buildAudioCard(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF708DA6),
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 18,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildProgressSlider(),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(Icons.ios_share_outlined, color: Colors.white, size: 28),
-              SizedBox(width: 16),
-              Text(
-                'or',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontFamily: 'Quicksand',
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              SizedBox(width: 16),
-              Icon(Icons.music_note, color: Colors.white, size: 28),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProgressSlider() {
-    return SliderTheme(
-      data: SliderTheme.of(context).copyWith(
-        trackHeight: 4,
-        activeTrackColor: const Color(0xFFF7DB9F),
-        inactiveTrackColor: Colors.white.withValues(alpha: 0.6),
-        thumbColor: const Color(0xFFF7DB9F),
-        overlayColor: const Color(0x33F7DB9F),
-        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Slider(
-              value: _progressValue,
-              onChanged: (value) {
-                setState(() {
-                  _progressValue = value;
-                });
-              },
-            ),
-          ),
-          const SizedBox(width: 16),
-          Container(
-            height: 44,
-            width: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF7DB9F),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Icon(
-              Icons.play_arrow_rounded,
-              color: Color(0xFF4D4D4D),
-              size: 28,
-            ),
-          ),
-        ],
-      ),
-    );
+    return const AudioCard(playIconVerticalOffset: -10);
   }
 
   Future<void> _openFilePicker() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowMultiple: false,
-        allowedExtensions: [
-          'pdf',
-          'doc',
-          'docx',
-          'txt',
-          'jpg',
-          'jpeg',
-          'png',
-          'mp3',
-          'wav',
-          'm4a',
-          'ppt',
-          'pptx',
-        ],
-      );
+    const int maxBytes = 10 * 1024 * 1024; // 10 MB
 
-      if (!mounted || result == null || result.files.isEmpty) {
+    final typeGroup = XTypeGroup(
+      label: 'allowed',
+      extensions: const [
+        'pdf',
+        'doc',
+        'docx',
+        'txt',
+        'jpg',
+        'jpeg',
+        'png',
+        'mp3',
+        'wav',
+        'm4a',
+        'ppt',
+        'pptx',
+      ],
+    );
+
+    try {
+      final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
+
+      if (!mounted || file == null) {
         return;
       }
 
-      final file = result.files.first;
-      const int maxBytes = 10 * 1024 * 1024; // 10 MB
+      final int size = await file.length();
 
-      if (file.size > maxBytes) {
+      if (size > maxBytes) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Please choose a file smaller than 10 MB.'),
@@ -362,9 +291,10 @@ class _HomePageState extends State<HomePage> {
         _selectedFileName = file.name;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Selected "${file.name}"')),
-      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Selected "${file.name}"')));
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -377,17 +307,15 @@ class _HomePageState extends State<HomePage> {
 }
 
 class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.label,
-    required this.icon,
-  });
+  const _ActionButton({required this.label, required this.icon, this.onTap});
 
   final String label;
   final IconData icon;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final buttonContent = Container(
       height: 46,
       width: 130,
       decoration: BoxDecoration(
@@ -418,15 +346,24 @@ class _ActionButton extends StatelessWidget {
         ],
       ),
     );
+
+    if (onTap == null) {
+      return buttonContent;
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: buttonContent,
+      ),
+    );
   }
 }
 
 class _IconBadge extends StatelessWidget {
-  const _IconBadge({
-    required this.assetPath,
-    this.size = 44,
-    this.onTap,
-  });
+  const _IconBadge({required this.assetPath, this.size = 44, this.onTap});
 
   final String assetPath;
   final double size;
@@ -462,16 +399,21 @@ class _IconBadge extends StatelessWidget {
 }
 
 class _ShortcutIcon extends StatelessWidget {
-  const _ShortcutIcon({required this.icon});
+  const _ShortcutIcon({
+    required this.icon,
+    this.color = const Color(0xFFF7DB9F),
+    this.margin = EdgeInsets.zero,
+  });
 
   final IconData icon;
+  final Color color;
+  final EdgeInsetsGeometry margin;
 
   @override
   Widget build(BuildContext context) {
-    return Icon(
-      icon,
-      color: const Color(0xFFF7DB9F),
-      size: 32,
+    return Padding(
+      padding: margin,
+      child: Icon(icon, color: color, size: 32),
     );
   }
 }
