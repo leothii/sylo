@@ -7,6 +7,7 @@ import '../utils/app_colors.dart';
 import '../widgets/audio_card.dart';
 import 'settings_overlay.dart';
 import 'summary_page.dart';
+import 'quiz_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -150,9 +151,14 @@ class _HomePageState extends State<HomePage> {
                           );
                         },
                       ),
-                      const _ActionButton(
+                      _ActionButton(
                         label: 'try quiz',
                         icon: Icons.help_outline,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const QuizPage()),
+                          );
+                        },
                       ),
                     ],
                   ),
