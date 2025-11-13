@@ -34,7 +34,7 @@ class _QuizPageState extends State<QuizPage> {
   final Map<int, int> _selectedOptions = {};
   final ScrollController _quizScrollController = ScrollController();
 
-  final double _cardTopMargin = 40;
+  final double _cardTopMargin = 72;
   final double _cardHorizontalPadding = 30;
   final double _cardHeaderHeight = 64;
   final double _titleLetterSpacing = 3.5;

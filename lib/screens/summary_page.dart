@@ -141,7 +141,7 @@ class _SummaryPageState extends State<SummaryPage> {
                     alignment: Alignment.topRight,
                     child: IconButton(
                       icon: const Icon(Icons.close, color: Color(0xFF7C6C63)),
-                      onPressed: () {},
+                      onPressed: ()  => Navigator.of(context).maybePop(),
                     ),
                   ),
                   SizedBox(height: _summaryTitleSpacingAbove),
