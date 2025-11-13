@@ -7,6 +7,7 @@ import '../utils/app_colors.dart';
 import '../widgets/audio_card.dart';
 import 'settings_overlay.dart';
 import 'summary_page.dart';
+import 'notes_page.dart';
 import 'quiz_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -74,7 +75,15 @@ class _HomePageState extends State<HomePage> {
           children: [
             _IconBadge(assetPath: 'assets/icons/profile.png', size: 44),
             const SizedBox(height: 18),
-            _IconBadge(assetPath: 'assets/icons/note.png', size: 44),
+            _IconBadge(
+              assetPath: 'assets/icons/note.png',
+              size: 44,
+              onTap: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const NotesPage()));
+              },
+            ),
           ],
         ),
         const Spacer(),
