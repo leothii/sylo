@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../utils/app_colors.dart';
+import 'about_page.dart'; // <--- Added Import (Adjust path if needed)
 
 class SettingsOverlay extends StatelessWidget {
   const SettingsOverlay({super.key});
@@ -77,15 +78,29 @@ class SettingsOverlay extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 15),
+
+                  // -------------------------------------------
+                  // THIS IS THE ONLY LOGIC CHANGED
+                  // -------------------------------------------
                   _buildOverlayButton(
                     context,
                     'about',
                     const Color(0xFFF7DB9F),
                     const Color(0xFF8B0000),
                     () {
-                      print('About button pressed!');
+                      // Close the settings menu
+                      Navigator.of(context).pop();
+
+                      // Open the AboutPage
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AboutPage(),
+                        ),
+                      );
                     },
                   ),
+
+                  // -------------------------------------------
                   const SizedBox(height: 15),
                   _buildOverlayButton(
                     context,
@@ -102,10 +117,7 @@ class SettingsOverlay extends StatelessWidget {
           ),
           Positioned(
             top: -30,
-            child: Image.asset(
-              'assets/images/sylo.png',
-              height: 120,
-            ),
+            child: Image.asset('assets/images/sylo.png', height: 120),
           ),
         ],
       ),
