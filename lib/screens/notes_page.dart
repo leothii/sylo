@@ -144,7 +144,7 @@ class _NotesPageState extends State<NotesPage> {
                               Icons.close,
                               color: Color(0xFF776E67),
                             ),
-                            onPressed: ()  => Navigator.of(context).maybePop(),
+                            onPressed: () => Navigator.of(context).maybePop(),
                           ),
                         ),
                       ],

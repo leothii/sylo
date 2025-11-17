@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../utils/app_colors.dart';
 import '../widgets/audio_card.dart';
+import '../widgets/sylo_chat_overlay.dart';
 
 class QuizPage extends StatefulWidget {
   const QuizPage({super.key});
@@ -227,10 +228,13 @@ class _QuizPageState extends State<QuizPage> {
             right: 0,
             child: Align(
               alignment: Alignment.topCenter,
-              child: Image.asset(
-                'assets/images/sylo.png',
-                height: 160,
-                fit: BoxFit.contain,
+              child: GestureDetector(
+                onTap: () => showSyloChatOverlay(context),
+                child: Image.asset(
+                  'assets/images/sylo.png',
+                  height: 160,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           ),

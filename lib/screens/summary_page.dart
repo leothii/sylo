@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../utils/app_colors.dart';
 import '../widgets/audio_card.dart';
+import '../widgets/sylo_chat_overlay.dart';
 
 class SummaryPage extends StatefulWidget {
   const SummaryPage({super.key});
@@ -141,7 +142,7 @@ class _SummaryPageState extends State<SummaryPage> {
                     alignment: Alignment.topRight,
                     child: IconButton(
                       icon: const Icon(Icons.close, color: Color(0xFF7C6C63)),
-                      onPressed: ()  => Navigator.of(context).maybePop(),
+                      onPressed: () => Navigator.of(context).maybePop(),
                     ),
                   ),
                   SizedBox(height: _summaryTitleSpacingAbove),
@@ -219,10 +220,13 @@ class _SummaryPageState extends State<SummaryPage> {
             right: 0,
             child: Align(
               alignment: Alignment.topCenter,
-              child: Image.asset(
-                'assets/images/sylo.png',
-                height: _owlHeight,
-                fit: BoxFit.contain,
+              child: GestureDetector(
+                onTap: () => showSyloChatOverlay(context),
+                child: Image.asset(
+                  'assets/images/sylo.png',
+                  height: _owlHeight,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           ),
