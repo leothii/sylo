@@ -1,6 +1,6 @@
 // lib/screens/home_page.dart
 
-import 'package:file_selector/file_selector.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../utils/app_colors.dart';
@@ -265,32 +265,40 @@ class _HomePageState extends State<HomePage> {
   Future<void> _openFilePicker() async {
     const int maxBytes = 10 * 1024 * 1024; // 10 MB
 
-    final typeGroup = XTypeGroup(
-      label: 'allowed',
-      extensions: const [
-        'pdf',
-        'doc',
-        'docx',
-        'txt',
-        'jpg',
-        'jpeg',
-        'png',
-        'mp3',
-        'wav',
-        'm4a',
-        'ppt',
-        'pptx',
-      ],
-    );
+    // 1. Define the allowed extensions for file_picker
+    final List<String> allowedExtensions = [
+      'pdf',
+      'doc',
+      'docx',
+      'txt',
+      'jpg',
+      'jpeg',
+      'png',
+      'mp3',
+      'wav',
+      'm4a',
+      'ppt',
+      'pptx',
+    ];
 
     try {
-      final XFile? file = await openFile(acceptedTypeGroups: [typeGroup]);
+      // 2. Use FilePicker.platform.pickFiles()
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: allowedExtensions,
+        allowMultiple: false, // We only want a single file
+      );
 
-      if (!mounted || file == null) {
-        return;
+      // 3. Check the result
+      if (!mounted || result == null || result.files.isEmpty) {
+        return; // User cancelled the picker or widget is no longer in tree
       }
 
-      final int size = await file.length();
+      // 4. Get the file from the result (it's a 'PlatformFile')
+      final PlatformFile file = result.files.single;
+
+      // 5. Check the file size (PlatformFile has a 'size' property)
+      final int size = file.size;
 
       if (size > maxBytes) {
         if (!mounted) return;
@@ -302,6 +310,7 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
+      // 6. Update the state
       setState(() {
         _selectedFileName = file.name;
       });
@@ -311,6 +320,9 @@ class _HomePageState extends State<HomePage> {
         context,
       ).showSnackBar(SnackBar(content: Text('Selected "${file.name}"')));
     } catch (error) {
+      // It's helpful to log the error for debugging
+      debugPrint('File picker error: $error');
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -319,7 +331,7 @@ class _HomePageState extends State<HomePage> {
       );
     }
   }
-}
+} // End of _HomePageStat
 
 class _ActionButton extends StatelessWidget {
   const _ActionButton({required this.label, required this.icon, this.onTap});

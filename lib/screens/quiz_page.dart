@@ -1,7 +1,7 @@
 // lib/screens/quiz_page.dart
 
 import 'package:flutter/material.dart';
-
+import 'score_page.dart';
 import '../utils/app_colors.dart';
 import '../widgets/audio_card.dart';
 
@@ -204,8 +204,17 @@ class _QuizPageState extends State<QuizPage> {
                         elevation: 8,
                         shadowColor: const Color(0x338F1D1D),
                       ),
-                      onPressed: () {},
+                      // ...
+                      onPressed: () {
+                        // This will push the ScorePage onto the navigation stack
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => const ScorePage(),
+                          ),
+                        );
+                      },
                       child: const Text(
+                        // ...
                         'submit',
                         style: TextStyle(
                           fontFamily: 'Quicksand',
