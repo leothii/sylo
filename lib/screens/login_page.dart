@@ -14,17 +14,19 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   late TextEditingController _nameController;
-  String? _selectedRole;
+  late TextEditingController _passwordController;
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController();
+    _passwordController = TextEditingController();
   }
 
   @override
   void dispose() {
     _nameController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -35,6 +37,7 @@ class _LoginPageState extends State<LoginPage> {
       body: SafeArea(
         child: Stack(
           children: [
+            // --- TOP ICONS (Unchanged) ---
             Positioned(
               right: 18,
               top: 28,
@@ -63,6 +66,7 @@ class _LoginPageState extends State<LoginPage> {
                 width: 36,
               ),
             ),
+            // --- LOGO / OWL (Unchanged) ---
             Positioned(
               left: 0,
               right: 0,
@@ -148,6 +152,8 @@ class _LoginPageState extends State<LoginPage> {
                 textAlign: TextAlign.left,
               ),
             ),
+
+            // --- NAME FIELD (Unchanged) ---
             Positioned(
               left: 108,
               top: 443,
@@ -185,6 +191,8 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
+
+            // --- PASSWORD FIELD (Unchanged) ---
             Positioned(
               left: 108,
               top: 502,
@@ -197,56 +205,65 @@ class _LoginPageState extends State<LoginPage> {
                     borderRadius: BorderRadius.circular(5),
                   ),
                 ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedRole,
-                    isExpanded: true,
-                    hint: const Padding(
-                      padding: EdgeInsets.only(left: 10),
-                      child: Text(
-                        'student',
-                        style: TextStyle(
-                          color: Color(0xFFB1B1B1),
-                          fontSize: 16,
-                          fontFamily: 'Quicksand',
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    dropdownColor: const Color(0xFFF1F1F1),
-                    style: const TextStyle(
-                      color: Colors.black,
+                child: TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: 'password',
+                    hintStyle: const TextStyle(
+                      color: Color(0xFFB1B1B1),
                       fontSize: 16,
                       fontFamily: 'Quicksand',
                       fontWeight: FontWeight.w600,
                     ),
-                    icon: const Padding(
-                      padding: EdgeInsets.only(right: 8),
-                      child: Icon(
-                        Icons.arrow_drop_down,
-                        color: Color(0xFFB1B1B1),
-                      ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
                     ),
-                    items: ['student', 'teacher', 'professional']
-                        .map(
-                          (String value) => DropdownMenuItem<String>(
-                            value: value,
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 10),
-                              child: Text(value),
-                            ),
-                          ),
-                        )
-                        .toList(),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        _selectedRole = newValue;
-                      });
-                    },
+                  ),
+                  style: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 16,
+                    fontFamily: 'Quicksand',
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
             ),
+
+            // --- *** MODIFIED: FORGOT PASSWORD TEXT *** ---
+            Positioned(
+              left: 108,
+              top: 535,
+              width: 163,
+              child: Container(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    // TODO: Handle forgot password tap
+                  },
+                  style: TextButton.styleFrom(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size(50, 20),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text(
+                    'forgot password',
+                    style: TextStyle(
+                      color: Color(0xFFF1F1F1),
+                      fontFamily: 'Quicksand',
+                      fontSize: 13, // Made smaller
+                      fontStyle: FontStyle.italic, // Added italic
+                      decoration: TextDecoration.underline, // Added underline
+                      decorationColor: Color(0xFFF1F1F1),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // --- CONTINUE BUTTON (Unchanged) ---
             Positioned(
               left: 126,
               top: 584,
@@ -284,6 +301,68 @@ class _LoginPageState extends State<LoginPage> {
                         style: TextStyle(
                           color: Color(0xFF882124),
                           fontSize: 22,
+                          fontFamily: 'Quicksand',
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // --- "OR" TEXT (Unchanged) ---
+            Positioned(
+              top: 630,
+              left: 126,
+              width: 116.85,
+              child: const Center(
+                child: Text(
+                  'OR',
+                  style: TextStyle(
+                    color: Color(0xFFF1F1F1),
+                    fontSize: 16,
+                    fontFamily: 'Quicksand',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+
+            // --- "SIGN UP" BUTTON (Unchanged) ---
+            Positioned(
+              left: 126,
+              top: 658,
+              child: Container(
+                width: 116.85,
+                height: 38,
+                decoration: ShapeDecoration(
+                  color: const Color(0xFF31a446),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  shadows: const [
+                    BoxShadow(
+                      color: Color(0x3F000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 4),
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      // TODO: Handle sign up tap
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: const Center(
+                      child: Text(
+                        'SIGN UP',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
                           fontFamily: 'Quicksand',
                           fontWeight: FontWeight.w500,
                         ),
