@@ -1,7 +1,6 @@
 // lib/screens/login_page.dart
 
 import 'package:flutter/material.dart';
-import '../utils/app_colors.dart';
 import 'home_page.dart';
 import 'settings_overlay.dart';
 
