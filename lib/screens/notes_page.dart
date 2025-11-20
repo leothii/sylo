@@ -1,9 +1,7 @@
 // lib/screens/notes_page.dart
 
 import 'package:flutter/material.dart';
-// Make sure to import your SettingsOverlay file here.
-// Adjust the path based on where you saved the overlay code.
-import 'settings_overlay.dart';
+import 'settings_overlay.dart'; // <--- Updated Import
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -117,7 +115,6 @@ class _NotesPageState extends State<NotesPage> {
                               color: _colIconGrey,
                               size: 28,
                             ),
-                            onPressed: () => Navigator.of(context).maybePop(),
                           ),
                         ],
                       ),
@@ -159,13 +156,12 @@ class _NotesPageState extends State<NotesPage> {
 
             // --- 3. FLOATING ICONS (Top Right) ---
 
-            // SETTINGS ICON (Updated with GestureDetector)
+            // SETTINGS ICON (With Overlay Trigger)
             Positioned(
               top: 10,
               right: 20,
               child: GestureDetector(
                 onTap: () {
-                  // Opens the Settings Overlay
                   showDialog(
                     context: context,
                     builder: (context) => const SettingsOverlay(),
