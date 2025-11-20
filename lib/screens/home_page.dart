@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../utils/app_colors.dart';
 import '../widgets/audio_card.dart';
+import '../widgets/sylo_chat_overlay.dart';
 import 'settings_overlay.dart';
 import 'summary_page.dart';
 import 'notes_page.dart';
@@ -178,10 +179,13 @@ class _HomePageState extends State<HomePage> {
           Positioned(
             top: -42,
             left: -10,
-            child: Image.asset(
-              'assets/images/sylo.png',
-              height: 160,
-              fit: BoxFit.contain,
+            child: GestureDetector(
+              onTap: () => showSyloChatOverlay(context),
+              child: Image.asset(
+                'assets/images/sylo.png',
+                height: 160,
+                fit: BoxFit.contain,
+              ),
             ),
           ),
         ],

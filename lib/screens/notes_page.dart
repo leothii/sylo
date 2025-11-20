@@ -117,6 +117,7 @@ class _NotesPageState extends State<NotesPage> {
                               color: _colIconGrey,
                               size: 28,
                             ),
+                            onPressed: () => Navigator.of(context).maybePop(),
                           ),
                         ],
                       ),
