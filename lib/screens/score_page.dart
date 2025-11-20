@@ -96,10 +96,15 @@ class _ScorePageState extends State<ScorePage> {
                       onPressed: () => Navigator.of(context).maybePop(),
                     ),
                   ),
-                  // --- "SCORE" Image ---
-                  Image.asset(
-                    'assets/images/Score.svg', // From your asset list
-                    height: 38,
+                  // --- "Score" Text Widget (REPLACED AS REQUESTED) ---
+                  Text(
+                    'Score',
+                    style: TextStyle(
+                      color: const Color(0xFF882124),
+                      fontSize: 32,
+                      fontFamily: 'Bungee',
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   // --- "10/10" Text ---

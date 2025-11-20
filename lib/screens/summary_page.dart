@@ -3,6 +3,10 @@
 import 'package:flutter/material.dart';
 import 'settings_overlay.dart'; // <--- Updated Import
 
+import '../utils/app_colors.dart';
+import '../widgets/audio_card.dart';
+import '../widgets/sylo_chat_overlay.dart';
+
 class SummaryPage extends StatefulWidget {
   const SummaryPage({super.key});
 
@@ -122,6 +126,85 @@ class _SummaryPageState extends State<SummaryPage> {
                               color: _colIconGrey,
                               size: 24,
                             ),
+    );
+  }
+
+  Widget _buildTopBar() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _TopBarIconColumn(
+          topAsset: 'assets/icons/profile.png',
+          bottomAsset: 'assets/icons/note.png',
+          topContainerSize: _leftTopIconContainerSize,
+          topImageSize: _leftTopIconImageSize,
+          bottomContainerSize: _leftBottomIconContainerSize,
+          bottomImageSize: _leftBottomIconImageSize,
+        ),
+        const Spacer(),
+        _TopBarIconColumn(
+          topAsset: 'assets/icons/settings.png',
+          bottomAsset: 'assets/icons/sound.png',
+          topContainerSize: _rightTopIconContainerSize,
+          topImageSize: _rightTopIconImageSize,
+          bottomContainerSize: _rightBottomIconContainerSize,
+          bottomImageSize: _rightBottomIconImageSize,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryCard(BuildContext context) {
+    return Expanded(
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Align(
+            alignment: Alignment.topCenter,
+            child: Container(
+              margin: EdgeInsets.only(top: _summaryCardTopMargin),
+              padding: EdgeInsets.fromLTRB(
+                _summaryCardHorizontalPadding,
+                _summaryCardTopPadding,
+                _summaryCardHorizontalPadding,
+                _summaryCardBottomPadding,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF6EDD7),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x33000000),
+                    blurRadius: 20,
+                    offset: Offset(0, 12),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Color(0xFF7C6C63)),
+                      onPressed: () => Navigator.of(context).maybePop(),
+                    ),
+                  ),
+                  SizedBox(height: _summaryTitleSpacingAbove),
+                  Transform.translate(
+                    offset: Offset(_summaryTitleOffsetX, _summaryTitleOffsetY),
+                    child: Text(
+                      'SUMMARY',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: const Color(0xFFAF3E37),
+                        fontFamily: 'Bungee',
+                        fontSize: 32,
+                        shadows: [
+                          Shadow(
+                            color: const Color(0x338F1D1D),
+                            offset: const Offset(0, 4),
+                            blurRadius: 6,
                           ),
                         ],
                       ),
@@ -178,6 +261,20 @@ class _SummaryPageState extends State<SummaryPage> {
                 'assets/images/sylo.png',
                 height: _owlHeight,
                 fit: BoxFit.contain,
+          ),
+          Positioned(
+            top: _owlVerticalOffset,
+            left: 0,
+            right: 0,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: GestureDetector(
+                onTap: () => showSyloChatOverlay(context),
+                child: Image.asset(
+                  'assets/images/sylo.png',
+                  height: _owlHeight,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
 
