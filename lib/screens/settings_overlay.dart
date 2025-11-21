@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
+// lib/widgets/settings_overlay.dart
 
+import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
-import 'about_page.dart'; // <--- Added Import (Adjust path if needed)
+import '../widgets/exit_overlay.dart';
+import '../widgets/language_overlay.dart'; // <--- Make sure this is imported
 
 class SettingsOverlay extends StatelessWidget {
   const SettingsOverlay({super.key});
@@ -60,55 +62,54 @@ class SettingsOverlay extends StatelessWidget {
                     const Color(0xFFF7DB9F),
                     const Color(0xFF8B0000),
                     () {
+                      // Navigate Home logic here
                       print('Home button pressed!');
                     },
                   ),
                   const SizedBox(height: 15),
+
+                  // --- LANGUAGE BUTTON (UPDATED) ---
                   _buildOverlayButton(
                     context,
                     'language',
                     const Color(0xFFF7DB9F),
                     const Color(0xFF8B0000),
                     () {
+                      // 1. Close Settings Overlay first
                       Navigator.of(context).pop();
+
+                      // 2. Open Language Overlay
                       showDialog(
                         context: context,
                         builder: (context) => const LanguageOverlay(),
                       );
                     },
                   ),
-                  const SizedBox(height: 15),
 
-                  // -------------------------------------------
-                  // THIS IS THE ONLY LOGIC CHANGED
-                  // -------------------------------------------
+                  const SizedBox(height: 15),
                   _buildOverlayButton(
                     context,
                     'about',
                     const Color(0xFFF7DB9F),
                     const Color(0xFF8B0000),
                     () {
-                      // Close the settings menu
-                      Navigator.of(context).pop();
-
-                      // Open the AboutPage
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const AboutPage(),
-                        ),
-                      );
+                      // Navigate to About Page logic
+                      print('About button pressed');
                     },
                   ),
-
-                  // -------------------------------------------
                   const SizedBox(height: 15),
+                  // --- EXIT BUTTON ---
                   _buildOverlayButton(
                     context,
                     'exit',
                     const Color(0xFF882225),
                     Colors.white,
                     () {
-                      print('Exit button pressed!');
+                      Navigator.of(context).pop();
+                      showDialog(
+                        context: context,
+                        builder: (context) => const ExitOverlay(),
+                      );
                     },
                   ),
                 ],
@@ -152,165 +153,6 @@ class SettingsOverlay extends StatelessWidget {
             fontWeight: FontWeight.bold,
             color: textColor,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class LanguageOverlay extends StatefulWidget {
-  const LanguageOverlay({super.key});
-
-  @override
-  State<LanguageOverlay> createState() => _LanguageOverlayState();
-}
-
-class _LanguageOverlayState extends State<LanguageOverlay> {
-  String _selectedLanguage = 'english';
-
-  static const Color buttonColor = Color(0xFFF7DB9F);
-  static const Color saveButtonColor = Color(0xFF882225);
-  static const Color buttonTextColor = Color(0xFF8B0000);
-  static const Color titleColor = Color(0xFFF7DB9F);
-
-  @override
-  Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.topCenter,
-        children: [
-          Container(
-            width: 217,
-            height: 328,
-            margin: const EdgeInsets.only(top: 60),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: AppColors.primaryBackground,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.25),
-                  blurRadius: 4,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  Text(
-                    'LANGUAGE',
-                    style: TextStyle(
-                      fontFamily: 'Bungee',
-                      fontSize: 24,
-                      color: titleColor,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withOpacity(0.25),
-                          blurRadius: 4,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  _buildLanguageButton('english'),
-                  const SizedBox(height: 10),
-                  _buildLanguageButton('tagalog'),
-                  const SizedBox(height: 10),
-                  _buildLanguageButton('hiligaynon'),
-                  const Spacer(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildBottomButton(
-                        'cancel',
-                        buttonColor,
-                        buttonTextColor,
-                      ),
-                      _buildBottomButton('save', saveButtonColor, Colors.white),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            top: -30,
-            child: Image.asset('assets/images/sylo.png', height: 120),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLanguageButton(String text) {
-    final bool isSelected = _selectedLanguage == text;
-
-    return SizedBox(
-      width: double.infinity,
-      height: 40,
-      child: ElevatedButton(
-        onPressed: () {
-          setState(() {
-            _selectedLanguage = text;
-          });
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: buttonColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-            side: isSelected
-                ? const BorderSide(color: Colors.white, width: 3)
-                : BorderSide.none,
-          ),
-          elevation: 4,
-          shadowColor: Colors.black.withOpacity(0.25),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: buttonTextColor,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomButton(String text, Color bgColor, Color textColor) {
-    final double fontSize = (text == 'cancel') ? 14 : 16;
-
-    return SizedBox(
-      width: 80,
-      height: 40,
-      child: ElevatedButton(
-        onPressed: () {
-          if (text == 'save') {
-            print('Saving language: $_selectedLanguage');
-          }
-          Navigator.of(context).pop();
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: bgColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          elevation: 4,
-          shadowColor: Colors.black.withOpacity(0.25),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.bold,
-            color: textColor,
-          ),
-          softWrap: false,
         ),
       ),
     );

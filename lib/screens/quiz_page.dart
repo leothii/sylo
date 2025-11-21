@@ -2,7 +2,8 @@
 
 import 'package:flutter/material.dart';
 import 'score_page.dart';
-import 'settings_overlay.dart'; // <--- Updated Import
+import 'settings_overlay.dart';
+import '../widgets/sylo_chat_overlay.dart'; // <--- Added Import
 
 class QuizPage extends StatefulWidget {
   const QuizPage({super.key});
@@ -198,10 +199,14 @@ class _QuizPageState extends State<QuizPage> {
             Positioned(
               top: _cardTopPosition + _owlVerticalOffset,
               left: 10,
-              child: Image.asset(
-                'assets/images/sylo.png',
-                height: _owlHeight,
-                fit: BoxFit.contain,
+              child: GestureDetector(
+                // Opens the Sylo Chat Overlay when the owl is pressed
+                onTap: () => showSyloChatOverlay(context),
+                child: Image.asset(
+                  'assets/images/sylo.png',
+                  height: _owlHeight,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
 
