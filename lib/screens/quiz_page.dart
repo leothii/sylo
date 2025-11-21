@@ -3,7 +3,12 @@
 import 'package:flutter/material.dart';
 import 'score_page.dart';
 import 'settings_overlay.dart';
-import '../widgets/sylo_chat_overlay.dart'; // <--- Added Import
+import '../widgets/sylo_chat_overlay.dart';
+
+// --- NEW IMPORTS ---
+import 'music_page.dart';
+import 'notes_page.dart';
+import 'profile_page.dart';
 
 class QuizPage extends StatefulWidget {
   const QuizPage({super.key});
@@ -16,16 +21,19 @@ class _QuizPageState extends State<QuizPage> {
   // --- Layout Constants ---
   final double _owlHeight = 150;
   final double _cardTopPosition = 120;
-  final double _owlVerticalOffset = -110; // Matches the Summary Page height
+  final double _owlVerticalOffset = -110;
 
   // --- Color Palette (From Figma) ---
   static const Color _colBackgroundBlue = Color(0xFF8AABC7);
-  static const Color _colCardGold = Color(0xFFF7DB9F); // The main card color
-  static const Color _colQuestionBg = Color(0xFFF8EFDC); // The inner light card
+  static const Color _colCardGold = Color(0xFFF7DB9F);
+  static const Color _colQuestionBg = Color(0xFFF8EFDC);
   static const Color _colTitleRed = Color(0xFF882124);
   static const Color _colTextGrey = Color(0xFF676767);
   static const Color _colOptionGrey = Color(0xFF898989);
   static const Color _colBtnShadow = Color(0x3F000000);
+
+  // Define the nav color here for consistency (same hex as your previous code)
+  static const Color _colNavItem = Color(0xFFE1B964);
 
   // --- Data ---
   final List<_QuizQuestion> _questions = [
@@ -52,19 +60,47 @@ class _QuizPageState extends State<QuizPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _colBackgroundBlue,
-      // Bottom Navigation Bar placeholder
+
+      // --- UPDATED BOTTOM NAVIGATION BAR ---
       bottomNavigationBar: Container(
         height: 80,
         color: _colBackgroundBlue,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: const [
-            Icon(Icons.person, color: Color(0xFFE1B964), size: 32),
-            Icon(Icons.menu_book, color: Color(0xFFE1B964), size: 32),
-            Icon(Icons.headphones, color: Color(0xFFE1B964), size: 32),
+          children: [
+            // 1. Profile Icon -> Navigates to ProfilePage
+            GestureDetector(
+              onTap: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const ProfilePage()));
+              },
+              child: const Icon(Icons.person, color: _colNavItem, size: 32),
+            ),
+
+            // 2. Notes Icon -> Navigates to NotesPage
+            GestureDetector(
+              onTap: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const NotesPage()));
+              },
+              child: const Icon(Icons.menu_book, color: _colNavItem, size: 32),
+            ),
+
+            // 3. Music Icon -> Navigates to MusicPage
+            GestureDetector(
+              onTap: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const MusicPage()));
+              },
+              child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+            ),
           ],
         ),
       ),
+
       body: SafeArea(
         child: Stack(
           clipBehavior: Clip.none,

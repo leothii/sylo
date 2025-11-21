@@ -1,7 +1,12 @@
 // lib/screens/score_page.dart
 
 import 'package:flutter/material.dart';
-import 'settings_overlay.dart'; // <--- Updated Import
+import 'settings_overlay.dart';
+
+// --- NEW IMPORTS ---
+import 'music_page.dart';
+import 'notes_page.dart';
+import 'profile_page.dart';
 
 class ScorePage extends StatefulWidget {
   const ScorePage({super.key});
@@ -25,23 +30,54 @@ class _ScorePageState extends State<ScorePage> {
   static const Color _colTextGrey = Color(0xFF676767);
   static const Color _colButtonShadow = Color(0x3F000000);
 
+  // Navigation Icon Color
+  static const Color _colNavItem = Color(0xFFE1B964);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _colBackgroundBlue,
-      // Bottom Navigation Bar placeholder
+
+      // --- UPDATED BOTTOM NAVIGATION BAR ---
       bottomNavigationBar: Container(
         height: 80,
         color: _colBackgroundBlue,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: const [
-            Icon(Icons.person, color: Color(0xFFE1B964), size: 32),
-            Icon(Icons.menu_book, color: Color(0xFFE1B964), size: 32),
-            Icon(Icons.headphones, color: Color(0xFFE1B964), size: 32),
+          children: [
+            // 1. Profile Icon -> Navigates to ProfilePage
+            GestureDetector(
+              onTap: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const ProfilePage()));
+              },
+              child: const Icon(Icons.person, color: _colNavItem, size: 32),
+            ),
+
+            // 2. Notes Icon -> Navigates to NotesPage
+            GestureDetector(
+              onTap: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const NotesPage()));
+              },
+              child: const Icon(Icons.menu_book, color: _colNavItem, size: 32),
+            ),
+
+            // 3. Music Icon -> Navigates to MusicPage
+            GestureDetector(
+              onTap: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const MusicPage()));
+              },
+              child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+            ),
           ],
         ),
       ),
+
       body: SafeArea(
         child: Stack(
           clipBehavior: Clip.none,

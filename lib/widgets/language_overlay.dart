@@ -109,7 +109,7 @@ class _LanguageOverlayState extends State<LanguageOverlay> {
 
           // --- Owl Image (Top Center) ---
           Positioned(
-            top: -35, // Positioned on top of the card
+            top: -25, // Positioned on top of the card
             child: Image.asset(
               'assets/images/sylo.png', // Using the standard owl
               height: 110,
