@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'settings_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
+import 'music_page.dart'; // <--- Import MusicPage
+import 'notes_page.dart'; // <--- Import NotesPage
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -35,6 +37,10 @@ class _ProfilePageState extends State<ProfilePage> {
   static const Color _colBtnRed = Color(0xFF882124);
   static const Color _colTextGrey = Color(0xFF676767);
   static const Color _colIconGrey = Color(0xFF676767);
+  static const Color _colNavItem = Color(0xFFE1B964); // Inactive Icon
+  static const Color _colNavActiveBg = Color(
+    0xFF7591A9,
+  ); // Active Blue Background
 
   @override
   void dispose() {
@@ -47,16 +53,50 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _colBackgroundBlue,
-      // Bottom Navigation Bar placeholder
+      // Bottom Navigation Bar
       bottomNavigationBar: Container(
         height: 80,
         color: _colBackgroundBlue,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: const [
-            Icon(Icons.person, color: Color(0xFFE1B964), size: 32),
-            Icon(Icons.menu_book, color: Color(0xFFE1B964), size: 32),
-            Icon(Icons.headphones, color: Color(0xFFE1B964), size: 32),
+          children: [
+            // 1. Profile Icon (ACTIVE) -> Has Blue Indicator
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: _colNavActiveBg, // Blue background
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.person, color: _colNavItem, size: 32),
+            ),
+
+            // 2. Notes Icon -> Navigates to NotesPage
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const NotesPage()),
+                );
+              },
+              child: const Icon(Icons.menu_book, color: _colNavItem, size: 32),
+            ),
+
+            // 3. Music Icon -> Navigates to MusicPage
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const MusicPage()),
+                );
+              },
+              child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+            ),
           ],
         ),
       ),
@@ -64,7 +104,7 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // --- 1. THE MAIN CARD (Dark Semi-Transparent) ---
+            // --- 1. THE MAIN CARD ---
             Positioned(
               top: _cardTopPosition,
               bottom: 100,
@@ -118,10 +158,6 @@ class _ProfilePageState extends State<ProfilePage> {
                     // Save Button
                     GestureDetector(
                       onTap: () {
-                        // Logic to save the input values
-                        print("Saved Name: ${_nameController.text}");
-                        print("Saved Security: ${_securityController.text}");
-
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Profile Saved!')),
                         );
@@ -177,7 +213,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
 
             // --- 3. FLOATING ICONS (Top Right) ---
-
             // SETTINGS ICON
             Positioned(
               top: 10,
@@ -213,7 +248,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Updated Helper to return a TextField
+  // Helper that returns a TextField
   Widget _buildInputField({
     required TextEditingController controller,
     required IconData icon,

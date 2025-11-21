@@ -3,7 +3,8 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../widgets/exit_overlay.dart';
-import '../widgets/language_overlay.dart'; // <--- Make sure this is imported
+import '../widgets/language_overlay.dart';
+import '../screens/about_page.dart'; // <--- Import AboutPage
 
 class SettingsOverlay extends StatelessWidget {
   const SettingsOverlay({super.key});
@@ -68,17 +69,14 @@ class SettingsOverlay extends StatelessWidget {
                   ),
                   const SizedBox(height: 15),
 
-                  // --- LANGUAGE BUTTON (UPDATED) ---
+                  // --- LANGUAGE BUTTON ---
                   _buildOverlayButton(
                     context,
                     'language',
                     const Color(0xFFF7DB9F),
                     const Color(0xFF8B0000),
                     () {
-                      // 1. Close Settings Overlay first
                       Navigator.of(context).pop();
-
-                      // 2. Open Language Overlay
                       showDialog(
                         context: context,
                         builder: (context) => const LanguageOverlay(),
@@ -87,17 +85,27 @@ class SettingsOverlay extends StatelessWidget {
                   ),
 
                   const SizedBox(height: 15),
+
+                  // --- ABOUT BUTTON (UPDATED) ---
                   _buildOverlayButton(
                     context,
                     'about',
                     const Color(0xFFF7DB9F),
                     const Color(0xFF8B0000),
                     () {
-                      // Navigate to About Page logic
-                      print('About button pressed');
+                      // 1. Close the Settings Overlay
+                      Navigator.of(context).pop();
+
+                      // 2. Navigate to About Page
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const AboutPage(),
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(height: 15),
+
                   // --- EXIT BUTTON ---
                   _buildOverlayButton(
                     context,

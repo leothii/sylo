@@ -2,7 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'settings_overlay.dart';
-import '../widgets/sylo_chat_overlay.dart'; // <--- Added Import
+import '../widgets/sylo_chat_overlay.dart';
+import 'music_page.dart'; // <--- Import MusicPage
+import 'notes_page.dart'; // <--- Import NotesPage
+import 'profile_page.dart'; // <--- Import ProfilePage
 
 class SummaryPage extends StatefulWidget {
   const SummaryPage({super.key});
@@ -14,16 +17,17 @@ class SummaryPage extends StatefulWidget {
 class _SummaryPageState extends State<SummaryPage> {
   // --- Layout Constants ---
   final double _owlHeight = 150;
-  final double _cardTopPosition = 130; // Push card down slightly to fit title
-  final double _owlVerticalOffset = -115; // Adjusts owl height relative to card
+  final double _cardTopPosition = 130;
+  final double _owlVerticalOffset = -115;
 
   // --- Color Palette ---
   static const Color _colBackgroundBlue = Color(0xFF8AABC7);
-  static const Color _colCardCream = Color(0xFFF8EFDC); // Main card color
+  static const Color _colCardCream = Color(0xFFF8EFDC);
   static const Color _colTitleRed = Color(0xFF882124);
-  static const Color _colTextGrey = Color(0xFF898989); // Body text color
-  static const Color _colScrollbarRed = Color(0xFF882124); // Scrollbar color
+  static const Color _colTextGrey = Color(0xFF898989);
+  static const Color _colScrollbarRed = Color(0xFF882124);
   static const Color _colIconGrey = Color(0xFF676767);
+  static const Color _colNavItem = Color(0xFFE1B964);
 
   // --- Data ---
   static const List<_SummaryItem> _items = [
@@ -68,16 +72,42 @@ class _SummaryPageState extends State<SummaryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _colBackgroundBlue,
-      // Bottom Navigation Bar placeholder
+      // Bottom Navigation Bar
       bottomNavigationBar: Container(
         height: 80,
         color: _colBackgroundBlue,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: const [
-            Icon(Icons.person, color: Color(0xFFE1B964), size: 32),
-            Icon(Icons.menu_book, color: Color(0xFFE1B964), size: 32),
-            Icon(Icons.headphones, color: Color(0xFFE1B964), size: 32),
+          children: [
+            // 1. Profile Icon -> Navigates to ProfilePage
+            GestureDetector(
+              onTap: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const ProfilePage()));
+              },
+              child: const Icon(Icons.person, color: _colNavItem, size: 32),
+            ),
+
+            // 2. Notes Icon -> Navigates to NotesPage
+            GestureDetector(
+              onTap: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const NotesPage()));
+              },
+              child: const Icon(Icons.menu_book, color: _colNavItem, size: 32),
+            ),
+
+            // 3. Music Icon -> Navigates to MusicPage
+            GestureDetector(
+              onTap: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const MusicPage()));
+              },
+              child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+            ),
           ],
         ),
       ),
@@ -134,7 +164,7 @@ class _SummaryPageState extends State<SummaryPage> {
                         thumbColor: _colScrollbarRed,
                         radius: const Radius.circular(4),
                         thickness: 6,
-                        thumbVisibility: true, // Always show scrollbar
+                        thumbVisibility: true,
                         padding: const EdgeInsets.only(right: 8),
                         child: ListView.separated(
                           padding: const EdgeInsets.symmetric(
@@ -151,7 +181,7 @@ class _SummaryPageState extends State<SummaryPage> {
                       ),
                     ),
 
-                    // Bottom Icons (Clipboard & Export)
+                    // Bottom Icons
                     Padding(
                       padding: const EdgeInsets.fromLTRB(30, 10, 30, 20),
                       child: Row(
@@ -171,12 +201,11 @@ class _SummaryPageState extends State<SummaryPage> {
               ),
             ),
 
-            // --- 2. THE OWL IMAGE (Top Left) ---
+            // --- 2. THE OWL IMAGE ---
             Positioned(
               top: _cardTopPosition + _owlVerticalOffset,
-              left: 0, // Aligned to left edge of screen
+              left: 0,
               child: GestureDetector(
-                // Opens the Sylo Chat Overlay when the owl is pressed
                 onTap: () => showSyloChatOverlay(context),
                 child: Image.asset(
                   'assets/images/sylo.png',
@@ -186,9 +215,7 @@ class _SummaryPageState extends State<SummaryPage> {
               ),
             ),
 
-            // --- 3. FLOATING ICONS (Top Right) ---
-
-            // SETTINGS ICON (With Overlay Trigger)
+            // --- 3. FLOATING ICONS ---
             Positioned(
               top: 10,
               right: 20,
@@ -207,7 +234,6 @@ class _SummaryPageState extends State<SummaryPage> {
               ),
             ),
 
-            // VOLUME ICON
             Positioned(
               top: 50,
               right: 20,
@@ -223,23 +249,20 @@ class _SummaryPageState extends State<SummaryPage> {
     );
   }
 
-  // Helper to build the Rich Text Paragraphs
   Widget _buildSummaryTextItem(_SummaryItem item) {
     return Text.rich(
       TextSpan(
         style: const TextStyle(
           fontFamily: 'Quicksand',
           fontSize: 14,
-          height: 1.4, // Line height for readability
+          height: 1.4,
           color: _colTextGrey,
         ),
         children: [
-          // Bold Uppercase Title (e.g., "LOREM")
           TextSpan(
             text: '${item.title} - ',
             style: const TextStyle(fontWeight: FontWeight.w700),
           ),
-          // Regular Body Text
           TextSpan(
             text: item.description,
             style: const TextStyle(fontWeight: FontWeight.w600),
@@ -250,7 +273,6 @@ class _SummaryPageState extends State<SummaryPage> {
   }
 }
 
-// Data Model
 class _SummaryItem {
   const _SummaryItem({required this.title, required this.description});
   final String title;

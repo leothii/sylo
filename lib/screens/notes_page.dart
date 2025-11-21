@@ -2,7 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'settings_overlay.dart';
-import '../widgets/sylo_chat_overlay.dart'; // <--- Added Import
+import '../widgets/sylo_chat_overlay.dart';
+import 'profile_page.dart'; // <--- Added Import
+import 'music_page.dart'; // <--- Added Import
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -25,6 +27,10 @@ class _NotesPageState extends State<NotesPage> {
   static const Color _colTextWhite = Color(0xFFF1F1F1);
   static const Color _colTextGrey = Color(0xFF676767);
   static const Color _colIconGrey = Color(0xFF676767);
+  static const Color _colNavItem = Color(0xFFE1B964); // Icon color
+  static const Color _colNavActiveBg = Color(
+    0xFF7591A9,
+  ); // Active Indicator Blue
 
   // --- Data ---
   final List<_NoteItem> _notes = [
@@ -54,16 +60,50 @@ class _NotesPageState extends State<NotesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: _colBackgroundBlue,
-      // Bottom Navigation Bar placeholder
+      // Bottom Navigation Bar
       bottomNavigationBar: Container(
         height: 80,
         color: _colBackgroundBlue,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: const [
-            Icon(Icons.person, color: Color(0xFFE1B964), size: 32),
-            Icon(Icons.menu_book, color: Color(0xFFE1B964), size: 32),
-            Icon(Icons.headphones, color: Color(0xFFE1B964), size: 32),
+          children: [
+            // 1. Profile Icon -> Navigates to ProfilePage
+            GestureDetector(
+              onTap: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const ProfilePage()));
+              },
+              child: const Icon(Icons.person, color: _colNavItem, size: 32),
+            ),
+
+            // 2. Notes Icon (ACTIVE) -> Has the Blue Indicator
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: _colNavActiveBg, // Blue background
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const Icon(Icons.menu_book, color: _colNavItem, size: 32),
+            ),
+
+            // 3. Music Icon -> Navigates to MusicPage
+            GestureDetector(
+              onTap: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const MusicPage()));
+              },
+              child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+            ),
           ],
         ),
       ),
@@ -148,7 +188,6 @@ class _NotesPageState extends State<NotesPage> {
               child: Align(
                 alignment: Alignment.topCenter,
                 child: GestureDetector(
-                  // Opens the Sylo Chat Overlay when the owl is pressed
                   onTap: () => showSyloChatOverlay(context),
                   child: Image.asset(
                     'assets/images/sylo.png',
@@ -160,8 +199,6 @@ class _NotesPageState extends State<NotesPage> {
             ),
 
             // --- 3. FLOATING ICONS (Top Right) ---
-
-            // SETTINGS ICON (With Overlay Trigger)
             Positioned(
               top: 10,
               right: 20,
@@ -180,7 +217,6 @@ class _NotesPageState extends State<NotesPage> {
               ),
             ),
 
-            // VOLUME ICON
             Positioned(
               top: 50,
               right: 20,
@@ -240,10 +276,8 @@ class _NotesPageState extends State<NotesPage> {
   }
 }
 
-// Data Model Class
 class _NoteItem {
   const _NoteItem({required this.title, required this.description});
-
   final String title;
   final String description;
 }
