@@ -11,6 +11,7 @@ import 'summary_page.dart';
 import 'notes_page.dart';
 import 'quiz_page.dart';
 import 'profile_page.dart'; // <--- Added Import for ProfilePage
+import 'music_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -44,8 +45,6 @@ class _HomePageState extends State<HomePage> {
                       _buildTopBar(),
                       const SizedBox(height: 24),
                       _buildWelcomeCard(context),
-                      const SizedBox(height: 36),
-                      _buildBottomShortcutRow(),
                       const SizedBox(height: 32),
                       _buildAudioCard(context),
                     ],
@@ -78,7 +77,7 @@ class _HomePageState extends State<HomePage> {
             // --- UPDATED PROFILE ICON ---
             _IconBadge(
               assetPath: 'assets/icons/profile.png',
-              size: 44,
+              size: 30,
               onTap: () {
                 Navigator.of(
                   context,
@@ -88,7 +87,7 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 18),
             _IconBadge(
               assetPath: 'assets/icons/note.png',
-              size: 44,
+              size:30,
               onTap: () {
                 Navigator.of(
                   context,
@@ -102,11 +101,11 @@ class _HomePageState extends State<HomePage> {
           children: [
             _IconBadge(
               assetPath: 'assets/icons/settings.png',
-              size: 44,
+              size: 30,
               onTap: _openSettingsOverlay,
             ),
             const SizedBox(height: 18),
-            _IconBadge(assetPath: 'assets/icons/sound.png', size: 44),
+            _IconBadge(assetPath: 'assets/icons/sound.png', size: 30),
           ],
         ),
       ],
@@ -257,27 +256,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildBottomShortcutRow() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: const [
-        _ShortcutIcon(
-          icon: Icons.headset,
-          color: Color(0xFFF2F2F2),
-          margin: EdgeInsets.only(right: 32),
-        ),
-        _ShortcutIcon(
-          icon: Icons.lightbulb_outline,
-          color: Color(0xFFF2F2F2),
-          margin: EdgeInsets.only(right: 32),
-        ),
-        _ShortcutIcon(icon: Icons.menu_book_outlined, color: Color(0xFFF2F2F2)),
-      ],
-    );
-  }
-
   Widget _buildAudioCard(BuildContext context) {
-    return const AudioCard(playIconVerticalOffset: -10);
+    return AudioCard(onTap: () {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const MusicPage()),
+      );
+    });
   }
 
   Future<void> _openFilePicker() async {
@@ -435,22 +419,3 @@ class _IconBadge extends StatelessWidget {
   }
 }
 
-class _ShortcutIcon extends StatelessWidget {
-  const _ShortcutIcon({
-    required this.icon,
-    this.color = const Color(0xFFF7DB9F),
-    this.margin = EdgeInsets.zero,
-  });
-
-  final IconData icon;
-  final Color color;
-  final EdgeInsetsGeometry margin;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: margin,
-      child: Icon(icon, color: color, size: 32),
-    );
-  }
-}

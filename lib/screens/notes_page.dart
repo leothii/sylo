@@ -5,6 +5,7 @@ import 'settings_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
 import 'profile_page.dart'; // <--- Added Import
 import 'music_page.dart'; // <--- Added Import
+import 'home_page.dart';
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -77,22 +78,30 @@ class _NotesPageState extends State<NotesPage> {
               child: const Icon(Icons.person, color: _colNavItem, size: 32),
             ),
 
-            // 2. Notes Icon (ACTIVE) -> Has the Blue Indicator
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: _colNavActiveBg, // Blue background
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
+            // 2. Home Icon -> Navigates back to HomePage
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const HomePage()),
+                  (route) => false,
+                );
+              },
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: _colNavActiveBg,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.home, color: _colNavItem, size: 32),
               ),
-              child: const Icon(Icons.menu_book, color: _colNavItem, size: 32),
             ),
 
             // 3. Music Icon -> Navigates to MusicPage
