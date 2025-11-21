@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'settings_overlay.dart';
+import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -353,12 +354,14 @@ class _LoginPageState extends State<LoginPage> {
                   color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
-                      // TODO: Handle sign up tap
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const SignUpPage()),
+                      );
                     },
                     borderRadius: BorderRadius.circular(10),
                     child: const Center(
                       child: Text(
-                        'SIGN UP',
+                        'sign up',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 20,

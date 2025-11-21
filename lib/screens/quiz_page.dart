@@ -7,8 +7,8 @@ import '../widgets/sylo_chat_overlay.dart';
 
 // --- NEW IMPORTS ---
 import 'music_page.dart';
-import 'notes_page.dart';
 import 'profile_page.dart';
+import 'home_page.dart';
 
 class QuizPage extends StatefulWidget {
   const QuizPage({super.key});
@@ -34,6 +34,7 @@ class _QuizPageState extends State<QuizPage> {
 
   // Define the nav color here for consistency (same hex as your previous code)
   static const Color _colNavItem = Color(0xFFE1B964);
+  static const Color _colNavActiveBg = Color(0xFF7591A9);
 
   // --- Data ---
   final List<_QuizQuestion> _questions = [
@@ -78,14 +79,30 @@ class _QuizPageState extends State<QuizPage> {
               child: const Icon(Icons.person, color: _colNavItem, size: 32),
             ),
 
-            // 2. Notes Icon -> Navigates to NotesPage
+            // 2. Home Icon -> Navigates back to HomePage
             GestureDetector(
               onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const NotesPage()));
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const HomePage()),
+                  (route) => false,
+                );
               },
-              child: const Icon(Icons.menu_book, color: _colNavItem, size: 32),
+              child: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: _colNavActiveBg,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: const Icon(Icons.home, color: _colNavItem, size: 32),
+              ),
             ),
 
             // 3. Music Icon -> Navigates to MusicPage
