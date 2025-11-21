@@ -1,7 +1,8 @@
 // lib/screens/summary_page.dart
 
 import 'package:flutter/material.dart';
-import 'settings_overlay.dart'; // <--- Updated Import
+import 'settings_overlay.dart';
+import '../widgets/sylo_chat_overlay.dart'; // <--- Added Import
 
 class SummaryPage extends StatefulWidget {
   const SummaryPage({super.key});
@@ -174,10 +175,14 @@ class _SummaryPageState extends State<SummaryPage> {
             Positioned(
               top: _cardTopPosition + _owlVerticalOffset,
               left: 0, // Aligned to left edge of screen
-              child: Image.asset(
-                'assets/images/sylo.png',
-                height: _owlHeight,
-                fit: BoxFit.contain,
+              child: GestureDetector(
+                // Opens the Sylo Chat Overlay when the owl is pressed
+                onTap: () => showSyloChatOverlay(context),
+                child: Image.asset(
+                  'assets/images/sylo.png',
+                  height: _owlHeight,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
 

@@ -10,6 +10,7 @@ import 'settings_overlay.dart';
 import 'summary_page.dart';
 import 'notes_page.dart';
 import 'quiz_page.dart';
+import 'profile_page.dart'; // <--- Added Import for ProfilePage
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -74,7 +75,16 @@ class _HomePageState extends State<HomePage> {
       children: [
         Column(
           children: [
-            _IconBadge(assetPath: 'assets/icons/profile.png', size: 44),
+            // --- UPDATED PROFILE ICON ---
+            _IconBadge(
+              assetPath: 'assets/icons/profile.png',
+              size: 44,
+              onTap: () {
+                Navigator.of(
+                  context,
+                ).push(MaterialPageRoute(builder: (_) => const ProfilePage()));
+              },
+            ),
             const SizedBox(height: 18),
             _IconBadge(
               assetPath: 'assets/icons/note.png',
@@ -176,6 +186,8 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
+
+          // --- OWL WITH CHAT OVERLAY TRIGGER ---
           Positioned(
             top: -42,
             left: -10,
@@ -188,6 +200,8 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
+
+          // -------------------------------------
         ],
       ),
     );
@@ -269,7 +283,6 @@ class _HomePageState extends State<HomePage> {
   Future<void> _openFilePicker() async {
     const int maxBytes = 10 * 1024 * 1024; // 10 MB
 
-    // 1. Define the allowed extensions for file_picker
     final List<String> allowedExtensions = [
       'pdf',
       'doc',
@@ -286,22 +299,17 @@ class _HomePageState extends State<HomePage> {
     ];
 
     try {
-      // 2. Use FilePicker.platform.pickFiles()
       final FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: allowedExtensions,
-        allowMultiple: false, // We only want a single file
+        allowMultiple: false,
       );
 
-      // 3. Check the result
       if (!mounted || result == null || result.files.isEmpty) {
-        return; // User cancelled the picker or widget is no longer in tree
+        return;
       }
 
-      // 4. Get the file from the result (it's a 'PlatformFile')
       final PlatformFile file = result.files.single;
-
-      // 5. Check the file size (PlatformFile has a 'size' property)
       final int size = file.size;
 
       if (size > maxBytes) {
@@ -314,7 +322,6 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
-      // 6. Update the state
       setState(() {
         _selectedFileName = file.name;
       });
@@ -324,7 +331,6 @@ class _HomePageState extends State<HomePage> {
         context,
       ).showSnackBar(SnackBar(content: Text('Selected "${file.name}"')));
     } catch (error) {
-      // It's helpful to log the error for debugging
       debugPrint('File picker error: $error');
 
       if (!mounted) return;
@@ -335,7 +341,7 @@ class _HomePageState extends State<HomePage> {
       );
     }
   }
-} // End of _HomePageStat
+}
 
 class _ActionButton extends StatelessWidget {
   const _ActionButton({required this.label, required this.icon, this.onTap});

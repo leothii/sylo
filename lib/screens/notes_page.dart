@@ -1,7 +1,8 @@
 // lib/screens/notes_page.dart
 
 import 'package:flutter/material.dart';
-import 'settings_overlay.dart'; // <--- Updated Import
+import 'settings_overlay.dart';
+import '../widgets/sylo_chat_overlay.dart'; // <--- Added Import
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -146,10 +147,14 @@ class _NotesPageState extends State<NotesPage> {
               right: 0,
               child: Align(
                 alignment: Alignment.topCenter,
-                child: Image.asset(
-                  'assets/images/sylo.png',
-                  height: _owlHeight,
-                  fit: BoxFit.contain,
+                child: GestureDetector(
+                  // Opens the Sylo Chat Overlay when the owl is pressed
+                  onTap: () => showSyloChatOverlay(context),
+                  child: Image.asset(
+                    'assets/images/sylo.png',
+                    height: _owlHeight,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               ),
             ),
