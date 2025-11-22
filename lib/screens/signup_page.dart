@@ -1,5 +1,6 @@
 // lib/screens/signup_page.dart
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import 'home_page.dart';
@@ -18,6 +19,7 @@ class _SignUpPageState extends State<SignUpPage> {
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
   late TextEditingController _confirmPasswordController;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
@@ -155,11 +157,8 @@ class _SignUpPageState extends State<SignUpPage> {
                   const SizedBox(height: 28),
                   _buildPrimaryButton(
                     label: 'sign up',
-                    onTap: () {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(builder: (_) => const HomePage()),
-                      );
-                    },
+                    onTap: _handleSignUp,
+                    isLoading: _isSubmitting,
                   ),
                   const SizedBox(height: 16),
                   const Text(
@@ -243,28 +242,108 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  Widget _buildPrimaryButton({required String label, required VoidCallback onTap}) {
+  Future<void> _handleSignUp() async {
+    FocusScope.of(context).unfocus();
+
+    final String name = _nameController.text.trim();
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text;
+    final String confirmPassword = _confirmPasswordController.text;
+
+    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+      _showMessage('Please fill in all fields.');
+      return;
+    }
+
+    if (password != confirmPassword) {
+      _showMessage('Passwords do not match.');
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      final UserCredential credential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
+
+      await credential.user?.updateDisplayName(name);
+
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    } on FirebaseAuthException catch (error) {
+      _showMessage(_mapAuthError(error));
+    } catch (_) {
+      _showMessage('Failed to sign up. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  String _mapAuthError(FirebaseAuthException error) {
+    switch (error.code) {
+      case 'email-already-in-use':
+        return 'That email is already registered. Try logging in instead.';
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'weak-password':
+        return 'Password should be at least 6 characters long.';
+      case 'operation-not-allowed':
+        return 'Email sign up is disabled for this project.';
+      default:
+        return error.message ?? 'Unable to create account. Please try again.';
+    }
+  }
+
+  Widget _buildPrimaryButton({
+    required String label,
+    required VoidCallback onTap,
+    bool isLoading = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 76),
       child: SizedBox(
         height: 48,
         child: ElevatedButton(
-          onPressed: onTap,
+          onPressed: isLoading ? null : onTap,
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFFF6DA9F),
             shadowColor: const Color(0x3F000000),
             elevation: 6,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           ),
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: Color(0xFF882124),
-              fontSize: 22,
-              fontFamily: 'Quicksand',
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          child: isLoading
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF882124)),
+                  ),
+                )
+              : Text(
+                  label,
+                  style: const TextStyle(
+                    color: Color(0xFF882124),
+                    fontSize: 22,
+                    fontFamily: 'Quicksand',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
         ),
       ),
     );

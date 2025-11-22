@@ -1,5 +1,6 @@
 // lib/screens/login_page.dart
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'settings_overlay.dart';
@@ -13,19 +14,20 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  late TextEditingController _nameController;
+  late TextEditingController _emailController;
   late TextEditingController _passwordController;
+  bool _isSubmitting = false;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
+    _emailController = TextEditingController();
     _passwordController = TextEditingController();
   }
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -86,7 +88,7 @@ class _LoginPageState extends State<LoginPage> {
                             Shadow(
                               offset: const Offset(0, 4),
                               blurRadius: 4,
-                              color: const Color(0xFF000000).withOpacity(0.25),
+                              color: const Color(0xFF000000).withValues(alpha: 0.25),
                             ),
                           ],
                         ),
@@ -102,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
                             Shadow(
                               offset: const Offset(0, 4),
                               blurRadius: 4,
-                              color: const Color(0xFF000000).withOpacity(0.25),
+                              color: const Color(0xFF000000).withValues(alpha: 0.25),
                             ),
                           ],
                         ),
@@ -167,9 +169,9 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
                 child: TextField(
-                  controller: _nameController,
+                  controller: _emailController,
                   decoration: InputDecoration(
-                    hintText: 'name',
+                    hintText: 'email',
                     hintStyle: const TextStyle(
                       color: Color(0xFFB1B1B1),
                       fontSize: 16,
@@ -188,6 +190,7 @@ class _LoginPageState extends State<LoginPage> {
                     fontFamily: 'Quicksand',
                     fontWeight: FontWeight.w600,
                   ),
+                  keyboardType: TextInputType.emailAddress,
                 ),
               ),
             ),
@@ -287,24 +290,27 @@ class _LoginPageState extends State<LoginPage> {
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () {
-                      Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (context) => const HomePage(),
-                        ),
-                      );
-                    },
+                    onTap: _isSubmitting ? null : _handleLogin,
                     borderRadius: BorderRadius.circular(10),
-                    child: const Center(
-                      child: Text(
-                        'continue',
-                        style: TextStyle(
-                          color: Color(0xFF882124),
-                          fontSize: 22,
-                          fontFamily: 'Quicksand',
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
+                    child: Center(
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF882124)),
+                              ),
+                            )
+                          : const Text(
+                              'continue',
+                              style: TextStyle(
+                                color: Color(0xFF882124),
+                                fontSize: 22,
+                                fontFamily: 'Quicksand',
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                     ),
                   ),
                 ),
@@ -353,11 +359,13 @@ class _LoginPageState extends State<LoginPage> {
                 child: Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const SignUpPage()),
-                      );
-                    },
+                    onTap: _isSubmitting
+                        ? null
+                        : () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const SignUpPage()),
+                            );
+                          },
                     borderRadius: BorderRadius.circular(10),
                     child: const Center(
                       child: Text(
@@ -378,5 +386,63 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleLogin() async {
+    FocusScope.of(context).unfocus();
+
+    final String email = _emailController.text.trim();
+    final String password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) {
+      _showMessage('Please enter both email and password.');
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomePage()),
+      );
+    } on FirebaseAuthException catch (error) {
+      _showMessage(_mapAuthError(error));
+    } catch (_) {
+      _showMessage('Failed to sign in. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  String _mapAuthError(FirebaseAuthException error) {
+    switch (error.code) {
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'user-disabled':
+        return 'This account has been disabled. Contact support.';
+      case 'user-not-found':
+        return 'No user found for that email. Try signing up.';
+      case 'wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'too-many-requests':
+        return 'Too many attempts. Please wait and try again.';
+      default:
+        return error.message ?? 'Unable to sign in. Please try again.';
+    }
   }
 }
