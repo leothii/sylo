@@ -6,11 +6,12 @@ import '../utils/app_colors.dart';
 import '../utils/file_text_extractor.dart';
 import '../widgets/audio_card.dart';
 import '../widgets/sylo_chat_overlay.dart';
+import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute
 import 'settings_overlay.dart';
 import 'summary_page.dart';
 import 'notes_page.dart';
 import 'quiz_page.dart';
-import 'profile_page.dart'; // <--- Added Import for ProfilePage
+import 'profile_page.dart';
 import 'music_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -83,17 +84,17 @@ class _HomePageState extends State<HomePage> {
               onTap: () {
                 Navigator.of(
                   context,
-                ).push(MaterialPageRoute(builder: (_) => const ProfilePage()));
+                ).push(SmoothPageRoute(builder: (_) => const ProfilePage()));
               },
             ),
             const SizedBox(height: 18),
             _IconBadge(
               assetPath: 'assets/icons/note.png',
-              size:30,
+              size: 30,
               onTap: () {
                 Navigator.of(
                   context,
-                ).push(MaterialPageRoute(builder: (_) => const NotesPage()));
+                ).push(SmoothPageRoute(builder: (_) => const NotesPage()));
               },
             ),
           ],
@@ -184,19 +185,26 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
+                      // --- ANALYZE BUTTON (Smooth Transition) ---
                       _ActionButton(
                         label: 'analyze',
                         icon: Icons.lightbulb_outline,
                         onTap: () {
                           _openSummaryPage();
+                          Navigator.of(context).push(
+                            SmoothPageRoute(
+                              builder: (_) => const SummaryPage(),
+                            ),
+                          );
                         },
                       ),
+                      // --- QUIZ BUTTON (Smooth Transition) ---
                       _ActionButton(
                         label: 'try quiz',
                         icon: Icons.help_outline,
                         onTap: () {
                           Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const QuizPage()),
+                            SmoothPageRoute(builder: (_) => const QuizPage()),
                           );
                         },
                       ),
@@ -278,11 +286,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildAudioCard(BuildContext context) {
-    return AudioCard(onTap: () {
-      Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const MusicPage()),
-      );
-    });
+    return AudioCard(
+      onTap: () {
+        Navigator.of(
+          context,
+        ).push(SmoothPageRoute(builder: (_) => const MusicPage()));
+      },
+    );
   }
 
   Future<void> _openFilePicker() async {
@@ -523,4 +533,3 @@ class _IconBadge extends StatelessWidget {
     );
   }
 }
-

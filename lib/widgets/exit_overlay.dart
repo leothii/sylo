@@ -1,6 +1,8 @@
 // lib/widgets/exit_overlay.dart
 
+import 'dart:io'; // Required for exit(0)
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class ExitOverlay extends StatelessWidget {
   const ExitOverlay({super.key});
@@ -24,8 +26,8 @@ class ExitOverlay extends StatelessWidget {
         children: [
           // --- Main Card ---
           Container(
-            width: 300, // Fixed width to match design proportions
-            margin: const EdgeInsets.only(top: 60), // Space for the owl
+            width: 300,
+            margin: const EdgeInsets.only(top: 60),
             padding: const EdgeInsets.fromLTRB(20, 50, 20, 30),
             decoration: BoxDecoration(
               color: _colCardBackground,
@@ -64,7 +66,7 @@ class ExitOverlay extends StatelessWidget {
                       label: 'cancel',
                       bgColor: _colBtnCream,
                       textColor: _colTextGrey,
-                      onTap: () => Navigator.of(context).pop(), // Close overlay
+                      onTap: () => Navigator.of(context).pop(),
                     ),
                     // Yes Button
                     _buildButton(
@@ -76,6 +78,18 @@ class ExitOverlay extends StatelessWidget {
                         // Add your specific exit logic here (e.g., exit app)
                         debugPrint('User confirmed exit');
                         Navigator.of(context).pop();
+                        debugPrint(
+                          "Exit button pressed - attempting to close app",
+                        );
+
+                        // 1. Try the standard way (Android)
+                        SystemNavigator.pop();
+
+                        // 2. Force Exit (Works on iOS/Android if standard way fails)
+                        // We use a tiny delay to let the UI register the tap effect first
+                        Future.delayed(const Duration(milliseconds: 100), () {
+                          exit(0);
+                        });
                       },
                     ),
                   ],
@@ -86,7 +100,7 @@ class ExitOverlay extends StatelessWidget {
 
           // --- Crying Owl Image (Top Center) ---
           Positioned(
-            top: -26, // Moves the owl up
+            top: -26,
             child: Image.asset(
               'assets/images/sad_owl.png',
               height: 110,
@@ -105,26 +119,30 @@ class ExitOverlay extends StatelessWidget {
     required Color textColor,
     required VoidCallback onTap,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 92,
-        height: 36,
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: const [
-            BoxShadow(color: _colShadow, blurRadius: 4, offset: Offset(0, 4)),
-          ],
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 20,
-              fontFamily: 'Quicksand',
-              fontWeight: FontWeight.w500,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Ink(
+          width: 92,
+          height: 36,
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: const [
+              BoxShadow(color: _colShadow, blurRadius: 4, offset: Offset(0, 4)),
+            ],
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: textColor,
+                fontSize: 20,
+                fontFamily: 'Quicksand',
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
         ),

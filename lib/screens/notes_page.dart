@@ -3,9 +3,10 @@
 import 'package:flutter/material.dart';
 import 'settings_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
-import 'profile_page.dart'; // <--- Added Import
-import 'music_page.dart'; // <--- Added Import
+import 'profile_page.dart';
+import 'music_page.dart';
 import 'home_page.dart';
+import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -29,9 +30,9 @@ class _NotesPageState extends State<NotesPage> {
   static const Color _colTextGrey = Color(0xFF676767);
   static const Color _colIconGrey = Color(0xFF676767);
   static const Color _colNavItem = Color(0xFFE1B964); // Icon color
-  static const Color _colNavActiveBg = Color(
-    0xFF7591A9,
-  ); // Active Indicator Blue
+
+  // Unused now, but kept for reference if you need it later
+  static const Color _colNavActiveBg = Color(0xFF7591A9);
 
   // --- Data ---
   final List<_NoteItem> _notes = [
@@ -71,9 +72,9 @@ class _NotesPageState extends State<NotesPage> {
             // 1. Profile Icon -> Navigates to ProfilePage
             GestureDetector(
               onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const ProfilePage()));
+                Navigator.of(context).push(
+                  SmoothPageRoute(builder: (_) => const ProfilePage()),
+                ); // <--- Smooth
               },
               child: const Icon(Icons.person, color: _colNavItem, size: 32),
             ),
@@ -82,34 +83,23 @@ class _NotesPageState extends State<NotesPage> {
             GestureDetector(
               onTap: () {
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const HomePage()),
+                  SmoothPageRoute(
+                    builder: (_) => const HomePage(),
+                  ), // <--- Smooth
                   (route) => false,
                 );
               },
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: _colNavActiveBg,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Icon(Icons.home, color: _colNavItem, size: 32),
-              ),
+              // UPDATED: Removed the Container with background color.
+              // Now it's just the icon, matching the others.
+              child: const Icon(Icons.home, color: _colNavItem, size: 32),
             ),
 
             // 3. Music Icon -> Navigates to MusicPage
             GestureDetector(
               onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const MusicPage()));
+                Navigator.of(context).push(
+                  SmoothPageRoute(builder: (_) => const MusicPage()),
+                ); // <--- Smooth
               },
               child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
             ),
