@@ -46,10 +46,10 @@ class LaunchScreen extends StatelessWidget {
                         fontWeight: FontWeight.w400,
                         shadows: [
                           Shadow(
-                            offset: const Offset(0, 4),
-                            blurRadius: 4,
-                            color: const Color(0xFF000000).withOpacity(0.25),
-                          )
+                                offset: const Offset(0, 4),
+                                blurRadius: 4,
+                                color: const Color(0x40000000),
+                              )
                         ],
                       ),
                     ),
@@ -62,10 +62,10 @@ class LaunchScreen extends StatelessWidget {
                         fontWeight: FontWeight.w400,
                         shadows: [
                           Shadow(
-                            offset: const Offset(0, 4),
-                            blurRadius: 4,
-                            color: const Color(0xFF000000).withOpacity(0.25),
-                          )
+                                offset: const Offset(0, 4),
+                                blurRadius: 4,
+                                color: const Color(0x40000000),
+                              )
                         ],
                       ),
                     ),

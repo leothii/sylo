@@ -2,7 +2,7 @@
 
 import 'dart:async';
 
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -361,7 +361,7 @@ class _MusicPageState extends State<MusicPage> {
                 child: GestureDetector(
                   onTap: () => showSyloChatOverlay(context),
                   child: Image.asset(
-                    'assets/images/music_owl.png',
+                    'assets/images/music_sylo.png',
                     height: _owlHeight,
                     fit: BoxFit.contain,
                   ),
@@ -492,20 +492,25 @@ class _MusicPageState extends State<MusicPage> {
   Future<void> _pickAudio() async {
     try {
       setState(() => _isLoadingFile = true);
-      final FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.audio,
+
+      final XFile? file = await openFile(
+        acceptedTypeGroups: const <XTypeGroup>[
+          XTypeGroup(
+            label: 'Audio',
+            extensions: <String>['mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg'],
+          ),
+        ],
       );
 
       if (!mounted) return;
 
-      if (result == null || result.files.isEmpty) {
+      if (file == null) {
         return;
       }
 
-      final PlatformFile file = result.files.single;
-      final String? path = file.path;
+      final String path = file.path;
 
-      if (path == null) {
+      if (path.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Unable to open selected file.')),
         );

@@ -3,18 +3,27 @@
 import 'package:flutter/material.dart';
 import 'settings_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
+import '../services/ai_service.dart';
 import 'music_page.dart'; // <--- Import MusicPage
 import 'notes_page.dart'; // <--- Import NotesPage
 import 'profile_page.dart'; // <--- Import ProfilePage
 
 class SummaryPage extends StatefulWidget {
-  const SummaryPage({super.key});
+  const SummaryPage({super.key, required this.sourceText});
+
+  final String sourceText;
 
   @override
   State<SummaryPage> createState() => _SummaryPageState();
 }
 
 class _SummaryPageState extends State<SummaryPage> {
+  AIService? _aiService;
+  String? _initError;
+  StudySummary? _summary;
+  String? _errorMessage;
+  bool _isLoading = true;
+
   // --- Layout Constants ---
   final double _owlHeight = 150;
   final double _cardTopPosition = 130;
@@ -29,44 +38,75 @@ class _SummaryPageState extends State<SummaryPage> {
   static const Color _colIconGrey = Color(0xFF676767);
   static const Color _colNavItem = Color(0xFFE1B964);
 
-  // --- Data ---
-  static const List<_SummaryItem> _items = [
-    _SummaryItem(
-      title: 'LOREM',
-      description:
-          'ipsum dolor sit amet. Est laborum voluptatem quo laudantium nisi et suscipit.',
-    ),
-    _SummaryItem(
-      title: 'ANIMA',
-      description:
-          'et laudantium amet eum omnis tenetur ut animi quia? Est recusandae',
-    ),
-    _SummaryItem(
-      title: 'ABCAECATI',
-      description:
-          'ab provident numquam eum impedit iusto aut rerum ducimus. Qui dolorum repellat et temporibus',
-    ),
-    _SummaryItem(
-      title: 'LABORUM',
-      description:
-          'numquam 33 obcaecati itaque qui esse officia et aliquid eius ut voluptates animi',
-    ),
-    _SummaryItem(
-      title: 'CULPA',
-      description:
-          'ratione in modi voluptatem aut quia impedit et nihil modi et cumque nulla.',
-    ),
-    _SummaryItem(
-      title: 'LABORUM',
-      description:
-          'numquam 33 obcaecati itaque qui esse officia et aliquid eius ut voluptates animi',
-    ),
-    _SummaryItem(
-      title: 'ABCAECATI',
-      description:
-          'ab provident numquam eum impedit iusto aut rerum ducimus. Qui dolorum repellat et temporibus',
-    ),
-  ];
+  static const TextStyle _titleTextStyle = TextStyle(
+    color: _colTitleRed,
+    fontSize: 20,
+    fontFamily: 'Bungee',
+  );
+
+  static const TextStyle _sectionHeadingStyle = TextStyle(
+    color: _colTitleRed,
+    fontSize: 16,
+    fontFamily: 'Quicksand',
+    fontWeight: FontWeight.w700,
+  );
+
+  static const TextStyle _bodyTextStyle = TextStyle(
+    fontFamily: 'Quicksand',
+    fontSize: 14,
+    height: 1.5,
+    color: _colTextGrey,
+    fontWeight: FontWeight.w600,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    try {
+      _aiService = AIService();
+    } catch (error) {
+      _initError = error is StateError ? error.message : '$error';
+    }
+    _loadSummary();
+  }
+
+  Future<void> _loadSummary() async {
+    if (_aiService == null) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage =
+            _initError ?? 'Gemini is not configured. Add your API key and try again.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _summary = null;
+    });
+
+    try {
+      final StudySummary summary =
+          await _aiService!.generateInsights(widget.sourceText);
+      if (!mounted) return;
+
+      setState(() {
+        _summary = summary;
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      final String message = error is StateError
+          ? error.message
+          : 'Unable to load summary. Please try again.\n$error';
+      setState(() {
+        _errorMessage = message;
+        _summary = null;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -160,25 +200,7 @@ class _SummaryPageState extends State<SummaryPage> {
 
                     // Scrollable Text Content
                     Expanded(
-                      child: RawScrollbar(
-                        thumbColor: _colScrollbarRed,
-                        radius: const Radius.circular(4),
-                        thickness: 6,
-                        thumbVisibility: true,
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ListView.separated(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 30,
-                            vertical: 10,
-                          ),
-                          itemCount: _items.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 20),
-                          itemBuilder: (context, index) {
-                            return _buildSummaryTextItem(_items[index]);
-                          },
-                        ),
-                      ),
+                      child: _buildSummaryBody(),
                     ),
 
                     // Bottom Icons
@@ -249,32 +271,106 @@ class _SummaryPageState extends State<SummaryPage> {
     );
   }
 
-  Widget _buildSummaryTextItem(_SummaryItem item) {
-    return Text.rich(
-      TextSpan(
-        style: const TextStyle(
-          fontFamily: 'Quicksand',
-          fontSize: 14,
-          height: 1.4,
-          color: _colTextGrey,
+  Widget _buildSummaryBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_errorMessage != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              _errorMessage!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: _colTextGrey,
+                fontFamily: 'Quicksand',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadSummary,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _colTitleRed,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('retry'),
+            ),
+          ],
         ),
-        children: [
-          TextSpan(
-            text: '${item.title} - ',
-            style: const TextStyle(fontWeight: FontWeight.w700),
-          ),
-          TextSpan(
-            text: item.description,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ],
+      );
+    }
+
+    if (_summary == null) {
+      return const SizedBox.shrink();
+    }
+
+    return _buildSummaryContent(_summary!);
+  }
+
+  Widget _buildSummaryContent(StudySummary summary) {
+    final List<Widget> children = <Widget>[
+      Text(summary.title, style: _titleTextStyle),
+      const SizedBox(height: 16),
+      Text(summary.overview, style: _bodyTextStyle),
+    ];
+
+    void addSection(String heading, List<String> items) {
+      if (items.isEmpty) {
+        return;
+      }
+      children.addAll(<Widget>[
+        const SizedBox(height: 24),
+        Text(heading, style: _sectionHeadingStyle),
+        const SizedBox(height: 8),
+        _buildBulletList(items),
+      ]);
+    }
+
+    addSection('Key Points', summary.keyPoints);
+    addSection('Study Tips', summary.studyTips);
+    addSection('Suggested Follow-up', summary.followUp);
+
+    return RawScrollbar(
+      thumbColor: _colScrollbarRed,
+      radius: const Radius.circular(4),
+      thickness: 6,
+      thumbVisibility: true,
+      padding: const EdgeInsets.only(right: 8),
+      child: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+        children: children,
       ),
     );
   }
-}
 
-class _SummaryItem {
-  const _SummaryItem({required this.title, required this.description});
-  final String title;
-  final String description;
+  Widget _buildBulletList(List<String> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: items.map((String item) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text('•', style: _bodyTextStyle),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  item,
+                  style: _bodyTextStyle,
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
 }

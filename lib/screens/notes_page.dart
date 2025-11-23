@@ -178,7 +178,7 @@ class _NotesPageState extends State<NotesPage> {
                           vertical: 10,
                         ),
                         itemCount: _notes.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 16),
+                        separatorBuilder: (context, _) => const SizedBox(height: 16),
                         itemBuilder: (context, index) {
                           return _buildNoteItem(_notes[index]);
                         },

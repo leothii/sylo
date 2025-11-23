@@ -179,8 +179,8 @@ class _QuizPageState extends State<QuizPage> {
                               80,
                             ), // Extra bottom padding for Submit button
                             itemCount: _questions.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 16),
+                            separatorBuilder: (context, _) =>
+                              const SizedBox(height: 16),
                             itemBuilder: (context, index) {
                               return _buildQuestionCard(index);
                             },
@@ -256,7 +256,7 @@ class _QuizPageState extends State<QuizPage> {
                 // Opens the Sylo Chat Overlay when the owl is pressed
                 onTap: () => showSyloChatOverlay(context),
                 child: Image.asset(
-                  'assets/images/sylo.png',
+                  'assets/images/quiz_sylo.png',
                   height: _owlHeight,
                   fit: BoxFit.contain,
                 ),

@@ -15,7 +15,7 @@ Future<void> showSyloChatOverlay(
   return showDialog<void>(
     context: context,
     barrierDismissible: true,
-    barrierColor: Colors.black.withOpacity(0.75),
+    barrierColor: const Color(0xBF000000),
     builder: (_) => SyloChatOverlay(
       owlOffset: owlOffset,
       brandTextOffset: brandTextOffset,
@@ -149,11 +149,11 @@ class _SyloBrandingText extends StatelessWidget {
                     fontSize: 32,
                     fontFamily: 'Bungee',
                     fontWeight: FontWeight.w400,
-                    shadows: [
+                    shadows: const [
                       Shadow(
-                        offset: const Offset(0, 4),
+                        offset: Offset(0, 4),
                         blurRadius: 4,
-                        color: Colors.black.withOpacity(0.25),
+                        color: Color(0x40000000),
                       ),
                     ],
                   ),
@@ -165,11 +165,11 @@ class _SyloBrandingText extends StatelessWidget {
                     fontSize: 32,
                     fontFamily: 'Bungee',
                     fontWeight: FontWeight.w400,
-                    shadows: [
+                    shadows: const [
                       Shadow(
-                        offset: const Offset(0, 4),
+                        offset: Offset(0, 4),
                         blurRadius: 4,
-                        color: Colors.black.withOpacity(0.25),
+                        color: Color(0x40000000),
                       ),
                     ],
                   ),

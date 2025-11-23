@@ -1,9 +1,9 @@
 // lib/screens/home_page.dart
 
-import 'package:file_picker/file_picker.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
-
 import '../utils/app_colors.dart';
+import '../utils/file_text_extractor.dart';
 import '../widgets/audio_card.dart';
 import '../widgets/sylo_chat_overlay.dart';
 import 'settings_overlay.dart';
@@ -23,6 +23,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final TextEditingController _interestController = TextEditingController();
   String? _selectedFileName;
+  String? _selectedFileContent;
+  bool _contentTrimmed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +47,7 @@ class _HomePageState extends State<HomePage> {
                       _buildTopBar(),
                       const SizedBox(height: 24),
                       _buildWelcomeCard(context),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 80),
                       _buildAudioCard(context),
                     ],
                   ),
@@ -144,16 +146,39 @@ class _HomePageState extends State<HomePage> {
                   _buildSearchField(),
                   if (_selectedFileName != null) ...[
                     const SizedBox(height: 12),
-                    Text(
-                      'Selected: $_selectedFileName',
-                      style: const TextStyle(
-                        color: Color(0xFF4D4D4D),
-                        fontSize: 14,
-                        fontFamily: 'Quicksand',
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Attached: $_selectedFileName',
+                            style: const TextStyle(
+                              color: Color(0xFF4D4D4D),
+                              fontSize: 14,
+                              fontFamily: 'Quicksand',
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: _clearSelectedFile,
+                          child: const Text('remove'),
+                        ),
+                      ],
                     ),
+                    if (_contentTrimmed)
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Note: file truncated to fit AI limits.',
+                          style: TextStyle(
+                            color: Color(0xFF7A4A4A),
+                            fontSize: 12,
+                            fontFamily: 'Quicksand',
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
                   ],
                   const SizedBox(height: 28),
                   Row(
@@ -163,11 +188,7 @@ class _HomePageState extends State<HomePage> {
                         label: 'analyze',
                         icon: Icons.lightbulb_outline,
                         onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => const SummaryPage(),
-                            ),
-                          );
+                          _openSummaryPage();
                         },
                       ),
                       _ActionButton(
@@ -267,34 +288,39 @@ class _HomePageState extends State<HomePage> {
   Future<void> _openFilePicker() async {
     const int maxBytes = 10 * 1024 * 1024; // 10 MB
 
-    final List<String> allowedExtensions = [
-      'pdf',
-      'doc',
-      'docx',
-      'txt',
-      'jpg',
-      'jpeg',
-      'png',
-      'mp3',
-      'wav',
-      'm4a',
-      'ppt',
-      'pptx',
-    ];
+    const XTypeGroup typeGroup = XTypeGroup(
+      label: 'Study Files',
+      extensions: <String>[
+        'txt',
+        'md',
+        'csv',
+        'json',
+        'html',
+        'htm',
+        'rtf',
+        'tex',
+        'pdf',
+        'docx',
+        'doc',
+        'png',
+        'jpg',
+        'jpeg',
+        'gif',
+        'bmp',
+        'tif',
+        'tiff',
+      ],
+    );
 
     try {
-      final FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: allowedExtensions,
-        allowMultiple: false,
-      );
+      final XFile? file =
+          await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
 
-      if (!mounted || result == null || result.files.isEmpty) {
+      if (!mounted || file == null) {
         return;
       }
 
-      final PlatformFile file = result.files.single;
-      final int size = file.size;
+      final int size = await file.length();
 
       if (size > maxBytes) {
         if (!mounted) return;
@@ -306,14 +332,43 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
+      final FileExtractionResult extraction = await extractFileText(file);
+
+      if (!extraction.hasText) {
+        final String message = extraction.error ??
+            'Unable to read ${file.name}. Attach a supported study file instead.';
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        return;
+      }
+
+      final String sanitized = _cleanExtractedText(extraction.text!);
+      const int maxChars = 12000;
+      bool trimmed = false;
+      String usableContent = sanitized;
+      if (sanitized.length > maxChars) {
+        usableContent = sanitized.substring(0, maxChars);
+        trimmed = true;
+      }
+
       setState(() {
         _selectedFileName = file.name;
+        _selectedFileContent = usableContent;
+        _contentTrimmed = trimmed;
       });
 
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Selected "${file.name}"')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            trimmed
+                ? 'Loaded ${file.name} (truncated to fit AI limits).'
+                : 'Loaded ${file.name}.',
+          ),
+        ),
+      );
     } catch (error) {
       debugPrint('File picker error: $error');
 
@@ -324,6 +379,56 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
+  }
+
+  void _openSummaryPage() {
+    final String manualContent = _interestController.text.trim();
+    final String fileContent = _selectedFileContent?.trim() ?? '';
+
+    if (manualContent.isEmpty && fileContent.isEmpty) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Add a topic, paste study text, or attach a file before analyzing.',
+            ),
+          ),
+        );
+      return;
+    }
+
+    final List<String> segments = <String>[];
+    if (manualContent.isNotEmpty) {
+      segments.add(manualContent);
+    }
+    if (fileContent.isNotEmpty) {
+      segments.add(fileContent);
+    }
+
+    final String combined = segments.join('\n\n');
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => SummaryPage(sourceText: combined),
+      ),
+    );
+  }
+  void _clearSelectedFile() {
+    setState(() {
+      _selectedFileName = null;
+      _selectedFileContent = null;
+      _contentTrimmed = false;
+    });
+  }
+
+  String _cleanExtractedText(String raw) {
+    final String withoutTabs = raw.replaceAll(RegExp(r'[\t]+'), ' ');
+    final Iterable<String> lines = withoutTabs
+        .split(RegExp(r'\r?\n'))
+        .map((String line) => line.trim())
+        .where((String line) => line.isNotEmpty);
+    return lines.join('\n');
   }
 }
 

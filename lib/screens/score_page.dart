@@ -259,7 +259,7 @@ class _ScorePageState extends State<ScorePage> {
               child: Align(
                 alignment: Alignment.topCenter,
                 child: Image.asset(
-                  'assets/images/happy_owl.png',
+                  'assets/images/happy_yylo.png',
                   height: _owlHeight,
                   fit: BoxFit.contain,
                 ),

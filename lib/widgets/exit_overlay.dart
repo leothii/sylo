@@ -74,7 +74,7 @@ class ExitOverlay extends StatelessWidget {
                       textColor: _colTextCream,
                       onTap: () {
                         // Add your specific exit logic here (e.g., exit app)
-                        print("User confirmed exit");
+                        debugPrint('User confirmed exit');
                         Navigator.of(context).pop();
                       },
                     ),

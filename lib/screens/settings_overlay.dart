@@ -25,11 +25,11 @@ class SettingsOverlay extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               color: AppColors.primaryBackground,
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.25),
+                  color: Color(0x40000000),
                   blurRadius: 4,
-                  offset: const Offset(0, 4),
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
@@ -64,7 +64,7 @@ class SettingsOverlay extends StatelessWidget {
                     const Color(0xFF8B0000),
                     () {
                       // Navigate Home logic here
-                      print('Home button pressed!');
+                      debugPrint('Home button pressed!');
                     },
                   ),
                   const SizedBox(height: 15),
@@ -151,7 +151,7 @@ class SettingsOverlay extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
           ),
           elevation: 4,
-          shadowColor: Colors.black.withOpacity(0.25),
+          shadowColor: const Color(0x40000000),
           padding: EdgeInsets.zero,
         ),
         child: Text(

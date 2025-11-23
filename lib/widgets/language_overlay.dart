@@ -59,11 +59,11 @@ class _LanguageOverlayState extends State<LanguageOverlay> {
                     fontSize: 28,
                     fontFamily: 'Bungee', // Using the specific font
                     fontWeight: FontWeight.w400,
-                    shadows: [
+                    shadows: const [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.25),
+                        color: Color(0x40000000),
                         blurRadius: 4,
-                        offset: const Offset(0, 4),
+                        offset: Offset(0, 4),
                       ),
                     ],
                   ),
@@ -97,7 +97,7 @@ class _LanguageOverlayState extends State<LanguageOverlay> {
                       textColor: _colActionTextCream,
                       onTap: () {
                         // Add save logic here
-                        print("Language saved: $_selectedLanguage");
+                        debugPrint('Language saved: $_selectedLanguage');
                         Navigator.of(context).pop();
                       },
                     ),
