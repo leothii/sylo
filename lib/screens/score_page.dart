@@ -7,6 +7,8 @@ import 'settings_overlay.dart';
 import 'music_page.dart';
 import 'notes_page.dart';
 import 'profile_page.dart';
+import 'home_page.dart';
+import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute
 
 class ScorePage extends StatefulWidget {
   const ScorePage({super.key});
@@ -48,29 +50,32 @@ class _ScorePageState extends State<ScorePage> {
             // 1. Profile Icon -> Navigates to ProfilePage
             GestureDetector(
               onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const ProfilePage()));
+                Navigator.of(context).push(
+                  SmoothPageRoute(builder: (_) => const ProfilePage()),
+                ); // <--- Smooth
               },
               child: const Icon(Icons.person, color: _colNavItem, size: 32),
             ),
 
-            // 2. Notes Icon -> Navigates to NotesPage
+            // 2. Home Icon -> Navigates back to HomePage (Replaced Notes Icon)
             GestureDetector(
               onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const NotesPage()));
+                Navigator.of(context).pushAndRemoveUntil(
+                  SmoothPageRoute(
+                    builder: (_) => const HomePage(),
+                  ), // <--- Smooth
+                  (route) => false,
+                );
               },
-              child: const Icon(Icons.menu_book, color: _colNavItem, size: 32),
+              child: const Icon(Icons.home, color: _colNavItem, size: 32),
             ),
 
             // 3. Music Icon -> Navigates to MusicPage
             GestureDetector(
               onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const MusicPage()));
+                Navigator.of(context).push(
+                  SmoothPageRoute(builder: (_) => const MusicPage()),
+                ); // <--- Smooth
               },
               child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
             ),

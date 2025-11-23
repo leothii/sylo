@@ -10,8 +10,9 @@ import 'settings_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
 import '../widgets/connecting_overlay.dart';
 import '../utils/audio_player_service.dart';
+import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute
 import 'profile_page.dart';
-import 'notes_page.dart';
+import 'home_page.dart';
 
 class MusicPage extends StatefulWidget {
   const MusicPage({super.key});
@@ -134,20 +135,25 @@ class _MusicPageState extends State<MusicPage> {
             GestureDetector(
               onTap: () {
                 Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const ProfilePage()),
+                  SmoothPageRoute(
+                    builder: (_) => const ProfilePage(),
+                  ), // <--- Smooth
                 );
               },
               child: const Icon(Icons.person, color: _colNavItem, size: 32),
             ),
 
-            // 2. Notes Icon -> Navigates to NotesPage
+            // 2. Home Icon -> Navigates back to HomePage
             GestureDetector(
               onTap: () {
-                Navigator.of(context).pushReplacement(
-                  MaterialPageRoute(builder: (_) => const NotesPage()),
+                Navigator.of(context).pushAndRemoveUntil(
+                  SmoothPageRoute(
+                    builder: (_) => const HomePage(),
+                  ), // <--- Smooth
+                  (route) => false,
                 );
               },
-              child: const Icon(Icons.menu_book, color: _colNavItem, size: 32),
+              child: const Icon(Icons.home, color: _colNavItem, size: 32),
             ),
 
             // 3. Headphones Icon (ACTIVE) -> Has Blue Indicator
@@ -214,7 +220,7 @@ class _MusicPageState extends State<MusicPage> {
 
                     const SizedBox(height: 30),
 
-                    // Playback Controls (Prev, Pause, Next)
+                    // Playback Controls
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -270,8 +276,9 @@ class _MusicPageState extends State<MusicPage> {
                         inactiveTrackColor: Colors.white24,
                         thumbColor: _colIconCream,
                         overlayColor: Colors.transparent,
-                        thumbShape:
-                            const RoundSliderThumbShape(enabledThumbRadius: 8),
+                        thumbShape: const RoundSliderThumbShape(
+                          enabledThumbRadius: 8,
+                        ),
                       ),
                       child: Slider(
                         min: 0,
@@ -333,7 +340,7 @@ class _MusicPageState extends State<MusicPage> {
 
                     const SizedBox(height: 12),
 
-                    // "Logged as user" Button -> Opens Connect Overlay
+                    // "Logged as user" Button
                     _buildActionButton(
                       text: 'logged as user*',
                       icon: Icons.wifi,
@@ -351,7 +358,7 @@ class _MusicPageState extends State<MusicPage> {
               ),
             ),
 
-            // --- 2. THE OWL IMAGE (Centered) ---
+            // --- 2. THE OWL IMAGE ---
             Positioned(
               top: _cardTopPosition + _owlVerticalOffset,
               left: 0,
@@ -369,8 +376,7 @@ class _MusicPageState extends State<MusicPage> {
               ),
             ),
 
-            // --- 3. FLOATING ICONS (Top Right) ---
-            // SETTINGS ICON
+            // --- 3. FLOATING ICONS ---
             Positioned(
               top: 10,
               right: 20,
@@ -389,7 +395,6 @@ class _MusicPageState extends State<MusicPage> {
               ),
             ),
 
-            // VOLUME ICON
             Positioned(
               top: 50,
               right: 20,
@@ -520,9 +525,9 @@ class _MusicPageState extends State<MusicPage> {
       });
     } catch (error) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load audio: $error')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load audio: $error')));
     } finally {
       if (mounted) {
         setState(() => _isLoadingFile = false);

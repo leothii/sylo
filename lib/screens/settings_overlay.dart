@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../widgets/exit_overlay.dart';
 import '../widgets/language_overlay.dart';
-import '../screens/about_page.dart'; // <--- Import AboutPage
+import '../screens/about_page.dart';
+import '../screens/notes_page.dart'; // <--- Added Import for NotesPage
+import '../utils/smooth_page.dart';
 
 class SettingsOverlay extends StatelessWidget {
   const SettingsOverlay({super.key});
@@ -57,14 +59,23 @@ class SettingsOverlay extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 5),
+
+                  // --- NOTES BUTTON (Replaced Home) ---
                   _buildOverlayButton(
                     context,
-                    'home',
+                    'notes', // Changed text to 'notes'
                     const Color(0xFFF7DB9F),
                     const Color(0xFF8B0000),
                     () {
-                      // Navigate Home logic here
-                      print('Home button pressed!');
+                      // 1. Close Settings Overlay
+                      Navigator.of(context).pop();
+
+                      // 2. Navigate to Notes Page (Smoothly)
+                      Navigator.of(context).push(
+                        SmoothPageRoute(
+                          builder: (context) => const NotesPage(),
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(height: 15),
@@ -86,19 +97,16 @@ class SettingsOverlay extends StatelessWidget {
 
                   const SizedBox(height: 15),
 
-                  // --- ABOUT BUTTON (UPDATED) ---
+                  // --- ABOUT BUTTON ---
                   _buildOverlayButton(
                     context,
                     'about',
                     const Color(0xFFF7DB9F),
                     const Color(0xFF8B0000),
                     () {
-                      // 1. Close the Settings Overlay
                       Navigator.of(context).pop();
-
-                      // 2. Navigate to About Page
                       Navigator.of(context).push(
-                        MaterialPageRoute(
+                        SmoothPageRoute(
                           builder: (context) => const AboutPage(),
                         ),
                       );

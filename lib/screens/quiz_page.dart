@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'score_page.dart';
 import 'settings_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
+import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute
 
 // --- NEW IMPORTS ---
 import 'music_page.dart';
@@ -72,9 +73,9 @@ class _QuizPageState extends State<QuizPage> {
             // 1. Profile Icon -> Navigates to ProfilePage
             GestureDetector(
               onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const ProfilePage()));
+                Navigator.of(context).push(
+                  SmoothPageRoute(builder: (_) => const ProfilePage()),
+                ); // <--- Smooth
               },
               child: const Icon(Icons.person, color: _colNavItem, size: 32),
             ),
@@ -83,34 +84,22 @@ class _QuizPageState extends State<QuizPage> {
             GestureDetector(
               onTap: () {
                 Navigator.of(context).pushAndRemoveUntil(
-                  MaterialPageRoute(builder: (_) => const HomePage()),
+                  SmoothPageRoute(
+                    builder: (_) => const HomePage(),
+                  ), // <--- Smooth
                   (route) => false,
                 );
               },
-              child: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: _colNavActiveBg,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 4,
-                      offset: Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: const Icon(Icons.home, color: _colNavItem, size: 32),
-              ),
+              // UPDATED: Removed the Container/Background. Just the icon now.
+              child: const Icon(Icons.home, color: _colNavItem, size: 32),
             ),
 
             // 3. Music Icon -> Navigates to MusicPage
             GestureDetector(
               onTap: () {
-                Navigator.of(
-                  context,
-                ).push(MaterialPageRoute(builder: (_) => const MusicPage()));
+                Navigator.of(context).push(
+                  SmoothPageRoute(builder: (_) => const MusicPage()),
+                ); // <--- Smooth
               },
               child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
             ),
@@ -211,8 +200,9 @@ class _QuizPageState extends State<QuizPage> {
                     child: GestureDetector(
                       onTap: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => const ScorePage(),
+                          SmoothPageRoute(
+                            builder: (context) =>
+                                const ScorePage(), // <--- Smooth
                           ),
                         );
                       },
