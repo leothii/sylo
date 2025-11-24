@@ -5,7 +5,6 @@ import 'settings_overlay.dart';
 
 // --- NEW IMPORTS ---
 import 'music_page.dart';
-import 'notes_page.dart';
 import 'profile_page.dart';
 import 'home_page.dart';
 import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'settings_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
 import 'music_page.dart';
-import 'notes_page.dart';
 import 'profile_page.dart';
 import 'home_page.dart';
 import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute
