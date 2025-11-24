@@ -3,11 +3,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart'; // IMPORT THIS
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 // --- CONFIGURATION ---
 // Your OpenRouter API Key
-const String _kApiKey =
-    "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";
+final String _kApiKey = dotenv.env['SYLO_API_KEY'] ?? "";
 
 // --- VISUAL CONSTANTS ---
 const Offset kDefaultSyloOwlOffset = Offset(-0.2, -0.77);
