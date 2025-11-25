@@ -164,13 +164,7 @@ class _HomePageState extends State<HomePage> {
                       _ActionButton(
                         label: 'analyze',
                         icon: Icons.lightbulb_outline,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            SmoothPageRoute(
-                              builder: (_) => const SummaryPage(),
-                            ),
-                          );
-                        },
+                        onTap: _openSummary,
                       ),
                       // --- QUIZ BUTTON (Smooth Transition) ---
                       _ActionButton(
@@ -205,6 +199,25 @@ class _HomePageState extends State<HomePage> {
 
           // -------------------------------------
         ],
+      ),
+    );
+  }
+
+  void _openSummary() {
+    final String rawText = _interestController.text.trim();
+    if (rawText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text('Please enter some study material or attach a document.'),
+        ),
+      );
+      return;
+    }
+
+    Navigator.of(context).push(
+      SmoothPageRoute(
+        builder: (_) => SummaryPage(sourceText: rawText),
       ),
     );
   }
