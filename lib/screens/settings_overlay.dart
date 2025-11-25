@@ -2,11 +2,12 @@
 
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
-import '../widgets/exit_overlay.dart';
-import '../widgets/language_overlay.dart';
-import '../screens/about_page.dart';
-import '../screens/notes_page.dart'; // <--- Added Import for NotesPage
 import '../utils/smooth_page.dart';
+import '../utils/streak_service.dart'; // <--- IMPORT THE LOGIC (SERVICE)
+import '../widgets/streak_overlay.dart'; // <--- IMPORT THE UI (WIDGET)
+import '../widgets/exit_overlay.dart';
+import '../screens/about_page.dart';
+import '../screens/notes_page.dart';
 
 class SettingsOverlay extends StatelessWidget {
   const SettingsOverlay({super.key});
@@ -60,17 +61,14 @@ class SettingsOverlay extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
 
-                  // --- NOTES BUTTON (Replaced Home) ---
+                  // --- NOTES BUTTON ---
                   _buildOverlayButton(
                     context,
-                    'notes', // Changed text to 'notes'
+                    'notes',
                     const Color(0xFFF7DB9F),
                     const Color(0xFF8B0000),
                     () {
-                      // 1. Close Settings Overlay
                       Navigator.of(context).pop();
-
-                      // 2. Navigate to Notes Page (Smoothly)
                       Navigator.of(context).push(
                         SmoothPageRoute(
                           builder: (context) => const NotesPage(),
@@ -80,18 +78,31 @@ class SettingsOverlay extends StatelessWidget {
                   ),
                   const SizedBox(height: 15),
 
-                  // --- LANGUAGE BUTTON ---
+                  // --- STREAK BUTTON (FIXED LOGIC) ---
                   _buildOverlayButton(
                     context,
-                    'language',
+                    'streak',
                     const Color(0xFFF7DB9F),
                     const Color(0xFF8B0000),
-                    () {
+                    () async {
+                      // 1. Close the Settings Overlay first
                       Navigator.of(context).pop();
-                      showDialog(
-                        context: context,
-                        builder: (context) => const LanguageOverlay(),
-                      );
+
+                      // 2. Get the real streak count using the SERVICE (Logic)
+                      final streakService = StreakService();
+                      final int count = await streakService.getCurrentStreak();
+
+                      if (context.mounted) {
+                        // 3. Show the Streak OVERLAY (UI) with the real number
+                        showDialog(
+                          context: context,
+                          barrierColor: Colors.black.withOpacity(0.6),
+                          builder: (context) => StreakOverlay(
+                            currentStreak: count == 0 ? 1 : count,
+                            // If 0, we show 1 for motivation, or remove this check if you prefer 0.
+                          ),
+                        );
+                      }
                     },
                   ),
 
