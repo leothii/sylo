@@ -8,9 +8,23 @@ import 'music_page.dart';
 import 'profile_page.dart';
 import 'home_page.dart';
 import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute
+import '../services/ai_service.dart';
 
 class ScorePage extends StatefulWidget {
-  const ScorePage({super.key});
+  const ScorePage({
+    super.key,
+    required this.correct,
+    required this.total,
+    required this.summary,
+    required this.questions,
+    required this.selections,
+  });
+
+  final int correct;
+  final int total;
+  final QuizResultsSummary summary;
+  final List<QuizQuestion> questions;
+  final Map<int, int> selections;
 
   @override
   State<ScorePage> createState() => _ScorePageState();
@@ -34,8 +48,28 @@ class _ScorePageState extends State<ScorePage> {
   // Navigation Icon Color
   static const Color _colNavItem = Color(0xFFE1B964);
 
+  late final List<QuizQuestion> _questions;
+  late final Map<int, int> _selections;
+
+  @override
+  void initState() {
+    super.initState();
+    _questions = List<QuizQuestion>.unmodifiable(widget.questions);
+    _selections = Map<int, int>.unmodifiable(widget.selections);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final int total = widget.total.clamp(0, 999);
+    final int correct = widget.correct.clamp(0, total);
+    final String scoreText = '$correct/$total';
+    final QuizResultsSummary summary = widget.summary;
+    final String quote = summary.quote.isNotEmpty
+        ? summary.quote
+        : 'Keep learning and growing.';
+    final String author = summary.author.isNotEmpty
+        ? summary.author
+        : 'Unknown';
     return Scaffold(
       backgroundColor: _colBackgroundBlue,
 
@@ -131,9 +165,9 @@ class _ScorePageState extends State<ScorePage> {
 
                     // Score Text "10/10"
                     const SizedBox(height: 10),
-                    const Text(
-                      '10/10',
-                      style: TextStyle(
+                    Text(
+                      scoreText,
+                      style: const TextStyle(
                         color: _colScoreGreen,
                         fontSize: 64,
                         fontFamily: 'Quicksand',
@@ -168,10 +202,10 @@ class _ScorePageState extends State<ScorePage> {
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Text(
-                                    'A journey of a thousand miles begins with a single step',
+                                  Text(
+                                    quote,
                                     textAlign: TextAlign.center,
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: _colTextGrey,
                                       fontSize: 20,
                                       fontFamily: 'Inter',
@@ -190,9 +224,9 @@ class _ScorePageState extends State<ScorePage> {
                                         color: _colTitleRed,
                                       ),
                                       const SizedBox(width: 12),
-                                      const Text(
-                                        'lao tzu',
-                                        style: TextStyle(
+                                      Text(
+                                        author,
+                                        style: const TextStyle(
                                           color: _colTextGrey,
                                           fontSize: 16,
                                           fontFamily: 'Inter',
@@ -225,27 +259,69 @@ class _ScorePageState extends State<ScorePage> {
 
                     // Restart Button
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 30),
-                      child: Container(
-                        width: 66,
-                        height: 40, // Adjusted height for better touch target
-                        decoration: BoxDecoration(
-                          color: _colTitleRed,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: _colButtonShadow,
-                              blurRadius: 4,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: GestureDetector(
+                        onTap: _showResultsSheet,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x22000000),
+                                blurRadius: 6,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.visibility, color: _colTitleRed),
+                              SizedBox(width: 8),
+                              Text(
+                                'view results',
+                                style: TextStyle(
+                                  color: _colTitleRed,
+                                  fontSize: 16,
+                                  fontFamily: 'Quicksand',
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Center(
-                          child: Image.asset(
-                            'assets/icons/refresh.png',
-                            width: 24,
-                            height: 24,
-                            color: const Color(0xFFF6DA9F), // Icon Color
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 30),
+                      child: GestureDetector(
+                        onTap: () => Navigator.of(context).maybePop(),
+                        child: Container(
+                          width: 66,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: _colTitleRed,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: _colButtonShadow,
+                                blurRadius: 4,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Image.asset(
+                              'assets/icons/refresh.png',
+                              width: 24,
+                              height: 24,
+                              color: const Color(0xFFF6DA9F),
+                            ),
                           ),
                         ),
                       ),
@@ -304,6 +380,140 @@ class _ScorePageState extends State<ScorePage> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showResultsSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: FractionallySizedBox(
+              heightFactor: 0.8,
+              child: Column(
+                children: [
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Quiz Results',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontFamily: 'Bungee',
+                      color: _colTitleRed,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      itemCount: _questions.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (BuildContext context, int index) {
+                        final QuizQuestion question = _questions[index];
+                        final int? selectedIndex = _selections[index];
+                        final int? correctIndex =
+                            question.correctOptionIndex;
+                        final bool isCorrect =
+                            selectedIndex != null &&
+                            correctIndex != null &&
+                            selectedIndex == correctIndex;
+
+                        String _optionLabel(int? optionIndex) {
+                          if (optionIndex == null) {
+                            return 'Not answered';
+                          }
+                          if (optionIndex < 0 ||
+                              optionIndex >= question.options.length) {
+                            return 'Not answered';
+                          }
+                          return question.options[optionIndex];
+                        }
+
+                        final String selectedLabel =
+                            _optionLabel(selectedIndex);
+                        final String correctLabel = _optionLabel(correctIndex);
+
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isCorrect
+                                ? const Color(0xFFE5F6E8)
+                                : const Color(0xFFFFEBEB),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isCorrect
+                                  ? const Color(0xFF6DB37F)
+                                  : const Color(0xFFE05C5C),
+                              width: 1,
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Question ${index + 1}',
+                                style: const TextStyle(
+                                  fontFamily: 'Quicksand',
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  color: _colTitleRed,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                question.prompt,
+                                style: const TextStyle(
+                                  fontFamily: 'Quicksand',
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13,
+                                  color: _colTextGrey,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Your answer: $selectedLabel',
+                                style: TextStyle(
+                                  fontFamily: 'Quicksand',
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 13,
+                                  color: isCorrect
+                                      ? const Color(0xFF357A4A)
+                                      : const Color(0xFFD14242),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              if (!isCorrect)
+                                Text(
+                                  'Correct answer: $correctLabel',
+                                  style: const TextStyle(
+                                    fontFamily: 'Quicksand',
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13,
+                                    color: _colTextGrey,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
