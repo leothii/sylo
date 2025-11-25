@@ -5,6 +5,7 @@ import 'score_page.dart';
 import 'settings_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
 import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute
+import '../services/ai_service.dart';
 
 // --- NEW IMPORTS ---
 import 'music_page.dart';
@@ -12,7 +13,9 @@ import 'profile_page.dart';
 import 'home_page.dart';
 
 class QuizPage extends StatefulWidget {
-  const QuizPage({super.key});
+  const QuizPage({super.key, required this.sourceText});
+
+  final String sourceText;
 
   @override
   State<QuizPage> createState() => _QuizPageState();
@@ -35,28 +38,108 @@ class _QuizPageState extends State<QuizPage> {
 
   // Define the nav color here for consistency (same hex as your previous code)
   static const Color _colNavItem = Color(0xFFE1B964);
-  static const Color _colNavActiveBg = Color(0xFF7591A9);
-
-  // --- Data ---
-  final List<_QuizQuestion> _questions = [
-    _QuizQuestion(
-      prompt:
-          'Lorem ipsum dolor sit amet. Est laborum voluptatem quo laudantium nisi et suscipit animi et laudantium amet eum omnis tenetur ut animi quia? Est recusandae',
-      options: const ['lorem', 'ipsum', 'dolor', 'amet'],
-    ),
-    _QuizQuestion(
-      prompt:
-          'Lorem ipsum dolor sit amet. Est laborum voluptatem quo laudantium nisi et suscipit animi et laudantium amet eum omnis tenetur ut animi quia? Est recusandae',
-      options: const ['lorem', 'ipsum', 'dolor', 'amet'],
-    ),
-    _QuizQuestion(
-      prompt:
-          'Lorem ipsum dolor sit amet. Est laborum voluptatem quo laudantium nisi et suscipit animi et laudantium amet eum omnis tenetur ut animi quia? Est recusandae',
-      options: const ['lorem', 'ipsum', 'dolor', 'amet'],
-    ),
-  ];
+  final AIService _aiService = AIService();
+  List<QuizQuestion> _questions = <QuizQuestion>[];
+  String? _errorMessage;
+  bool _isLoading = true;
+  bool _isSubmitting = false;
 
   final Map<int, int> _selectedOptions = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQuiz();
+  }
+
+  Widget _buildQuizBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_errorMessage != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              _errorMessage!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: _colTextGrey,
+                fontSize: 14,
+                fontFamily: 'Quicksand',
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadQuiz,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _colTitleRed,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_questions.isEmpty) {
+      return const Center(
+        child: Text(
+          'No quiz questions available right now.',
+          style: TextStyle(
+            color: _colTextGrey,
+            fontSize: 14,
+            fontFamily: 'Quicksand',
+            fontWeight: FontWeight.w600,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 80),
+      itemCount: _questions.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      itemBuilder: (BuildContext context, int index) {
+        return _buildQuestionCard(index);
+      },
+    );
+  }
+
+  Future<void> _loadQuiz() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _questions = <QuizQuestion>[];
+      _selectedOptions.clear();
+    });
+
+    try {
+      final List<QuizQuestion> questions =
+          await _aiService.generateQuiz(widget.sourceText);
+      if (!mounted) return;
+      setState(() {
+        _questions = questions;
+        _isLoading = false;
+      });
+    } catch (error) {
+      if (!mounted) return;
+      final String message = error is StateError
+          ? error.message
+          : 'Unable to generate quiz questions. Please try again.';
+      setState(() {
+        _errorMessage = message;
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -159,22 +242,7 @@ class _QuizPageState extends State<QuizPage> {
                         ),
 
                         // Scrollable Question List
-                        Expanded(
-                          child: ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(
-                              20,
-                              10,
-                              20,
-                              80,
-                            ), // Extra bottom padding for Submit button
-                            itemCount: _questions.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 16),
-                            itemBuilder: (context, index) {
-                              return _buildQuestionCard(index);
-                            },
-                          ),
-                        ),
+                        Expanded(child: _buildQuizBody()),
                       ],
                     ),
                   ),
@@ -197,41 +265,121 @@ class _QuizPageState extends State<QuizPage> {
                   Positioned(
                     bottom: 20,
                     right: 20,
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          SmoothPageRoute(
-                            builder: (context) =>
-                                const ScorePage(), // <--- Smooth
+                    child: Builder(
+                      builder: (BuildContext context) {
+                        final bool canSubmit = !_isLoading && !_isSubmitting &&
+                            _questions.isNotEmpty &&
+                            _selectedOptions.length == _questions.length;
+                        return GestureDetector(
+                          onTap: canSubmit
+                              ? () async {
+                                  setState(() {
+                                    _isSubmitting = true;
+                                  });
+
+                                  final int total = _questions.length;
+                                  final int correct = _questions
+                                      .asMap()
+                                      .entries
+                                      .where((MapEntry<int, QuizQuestion> entry) {
+                                    final int index = entry.key;
+                                    final QuizQuestion question = entry.value;
+                                    final int? selected =
+                                        _selectedOptions[index];
+                                    final int? expected =
+                                        question.correctOptionIndex;
+                                    return selected != null &&
+                                        expected != null &&
+                                        selected == expected;
+                                  }).length;
+
+                                  try {
+                                    final QuizResultsSummary summary =
+                                        await _aiService.buildQuizSummary(
+                                      content: widget.sourceText,
+                                      total: total,
+                                      correct: correct,
+                                    );
+
+                                    if (!mounted) return;
+
+                                    Navigator.of(context).push(
+                                      SmoothPageRoute(
+                                        builder: (BuildContext context) =>
+                                            ScorePage(
+                                          correct: correct,
+                                          total: total,
+                                          summary: summary,
+                                          questions: _questions,
+                                          selections:
+                                              Map<int, int>.from(_selectedOptions),
+                                        ),
+                                      ),
+                                    );
+                                  } catch (error) {
+                                    if (!mounted) return;
+                                    final QuizResultsSummary fallback =
+                                        QuizResultsSummary(
+                                      quote:
+                                          'Success is the sum of small efforts, repeated day in and day out.',
+                                      author: 'Robert Collier',
+                                      feedback:
+                                          'Great work completing the quiz! Review the questions you missed and try again when you are ready.',
+                                    );
+
+                                    Navigator.of(context).push(
+                                      SmoothPageRoute(
+                                        builder: (BuildContext context) =>
+                                            ScorePage(
+                                          correct: correct,
+                                          total: total,
+                                          summary: fallback,
+                                          questions: _questions,
+                                          selections:
+                                              Map<int, int>.from(_selectedOptions),
+                                        ),
+                                      ),
+                                    );
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() {
+                                        _isSubmitting = false;
+                                      });
+                                    }
+                                  }
+                                }
+                              : null,
+                          child: Opacity(
+                            opacity: canSubmit ? 1 : 0.4,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _colTitleRed,
+                                borderRadius: BorderRadius.circular(8),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: _colBtnShadow,
+                                    blurRadius: 4,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: const Text(
+                                'submit',
+                                style: TextStyle(
+                                  color: Color(0xFFF6DA9F),
+                                  fontSize: 14,
+                                  fontFamily: 'Quicksand',
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
                           ),
                         );
                       },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _colTitleRed,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: _colBtnShadow,
-                              blurRadius: 4,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: const Text(
-                          'submit',
-                          style: TextStyle(
-                            color: Color(0xFFF6DA9F), // Gold Text
-                            fontSize: 14,
-                            fontFamily: 'Quicksand',
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
                     ),
                   ),
                 ],
@@ -291,21 +439,21 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   Widget _buildQuestionCard(int index) {
-    final question = _questions[index];
-    final selectedOptionIndex = _selectedOptions[index];
+    final QuizQuestion question = _questions[index];
+    final int? selectedOptionIndex = _selectedOptions[index];
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _colQuestionBg, // Cream/White color
+        color: _colQuestionBg,
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Question Text
           Text(
             question.prompt,
             style: const TextStyle(
@@ -313,72 +461,73 @@ class _QuizPageState extends State<QuizPage> {
               fontSize: 12,
               fontFamily: 'Quicksand',
               fontWeight: FontWeight.w600,
-              height: 1.2,
+              height: 1.3,
             ),
           ),
           const SizedBox(height: 16),
+          Column(
+            children: List<Widget>.generate(
+              question.options.length,
+              (int optionIndex) {
+                final bool isSelected = selectedOptionIndex == optionIndex;
+                final String label = question.options[optionIndex];
 
-          // Options Row (Horizontal Radio Buttons)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(question.options.length, (optionIndex) {
-              final isSelected = selectedOptionIndex == optionIndex;
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _selectedOptions[index] = optionIndex;
-                  });
-                },
-                child: Column(
-                  children: [
-                    // Custom Radio Circle
-                    Container(
-                      width: 22,
-                      height: 22,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: _colOptionGrey, width: 2),
-                      ),
-                      child: isSelected
-                          ? Center(
-                              child: Container(
-                                width: 12,
-                                height: 12,
-                                decoration: const BoxDecoration(
-                                  color: _colTextGrey,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            )
-                          : null,
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedOptions[index] = optionIndex;
+                      });
+                    },
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: _colOptionGrey,
+                              width: 2,
+                            ),
+                          ),
+                          child: isSelected
+                              ? Center(
+                                  child: Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: const BoxDecoration(
+                                      color: _colTextGrey,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                )
+                              : null,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            label,
+                            style: const TextStyle(
+                              color: _colOptionGrey,
+                              fontSize: 13,
+                              fontFamily: 'Quicksand',
+                              fontWeight: FontWeight.w600,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 4),
-                    // Label (lorem, ipsum, etc.)
-                    Text(
-                      question.options[optionIndex],
-                      style: const TextStyle(
-                        color: _colOptionGrey,
-                        fontSize: 12,
-                        fontFamily: 'Quicksand',
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
     );
   }
-}
-
-// --- Data Models ---
-
-class _QuizQuestion {
-  const _QuizQuestion({required this.prompt, required this.options});
-
-  final String prompt;
-  final List<String> options;
 }

@@ -170,11 +170,7 @@ class _HomePageState extends State<HomePage> {
                       _ActionButton(
                         label: 'try quiz',
                         icon: Icons.help_outline,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            SmoothPageRoute(builder: (_) => const QuizPage()),
-                          );
-                        },
+                        onTap: _openQuiz,
                       ),
                     ],
                   ),
@@ -218,6 +214,25 @@ class _HomePageState extends State<HomePage> {
     Navigator.of(context).push(
       SmoothPageRoute(
         builder: (_) => SummaryPage(sourceText: rawText),
+      ),
+    );
+  }
+
+  void _openQuiz() {
+    final String rawText = _interestController.text.trim();
+    if (rawText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text('Please enter some study material or attach a document.'),
+        ),
+      );
+      return;
+    }
+
+    Navigator.of(context).push(
+      SmoothPageRoute(
+        builder: (_) => QuizPage(sourceText: rawText),
       ),
     );
   }
