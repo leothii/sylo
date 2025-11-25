@@ -17,6 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   late TextEditingController _emailController;
   late TextEditingController _passwordController;
   bool _isSubmitting = false;
+  bool _isSendingReset = false;
 
   @override
   void initState() {
@@ -243,22 +244,20 @@ class _LoginPageState extends State<LoginPage> {
               child: Container(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: () {
-                    // TODO: Handle forgot password tap
-                  },
+                  onPressed: _isSendingReset ? null : _handleForgotPassword,
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
                     minimumSize: Size(50, 20),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: const Text(
-                    'forgot password',
-                    style: TextStyle(
+                  child: Text(
+                    _isSendingReset ? 'sending...' : 'forgot password',
+                    style: const TextStyle(
                       color: Color(0xFFF1F1F1),
                       fontFamily: 'Quicksand',
-                      fontSize: 13, // Made smaller
-                      fontStyle: FontStyle.italic, // Added italic
-                      decoration: TextDecoration.underline, // Added underline
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                      decoration: TextDecoration.underline,
                       decorationColor: Color(0xFFF1F1F1),
                     ),
                   ),
@@ -422,6 +421,31 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> _handleForgotPassword() async {
+    FocusScope.of(context).unfocus();
+
+    final String email = _emailController.text.trim();
+    if (email.isEmpty) {
+      _showMessage('Enter your email address to reset your password.');
+      return;
+    }
+
+    setState(() => _isSendingReset = true);
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      _showMessage('Password reset link sent to $email. Check your inbox.');
+    } on FirebaseAuthException catch (error) {
+      _showMessage(_mapResetError(error));
+    } catch (_) {
+      _showMessage('Unable to send password reset email. Please try again.');
+    } finally {
+      if (mounted) {
+        setState(() => _isSendingReset = false);
+      }
+    }
+  }
+
   void _showMessage(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -443,6 +467,23 @@ class _LoginPageState extends State<LoginPage> {
         return 'Too many attempts. Please wait and try again.';
       default:
         return error.message ?? 'Unable to sign in. Please try again.';
+    }
+  }
+
+  String _mapResetError(FirebaseAuthException error) {
+    switch (error.code) {
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+      case 'user-not-found':
+        return 'No user found for that email. Try signing up.';
+      case 'missing-android-pkg-name':
+      case 'missing-continue-uri':
+      case 'missing-ios-bundle-id':
+      case 'invalid-continue-uri':
+      case 'unauthorized-continue-uri':
+        return 'Password reset is not available for this app configuration.';
+      default:
+        return error.message ?? 'Unable to send password reset email.';
     }
   }
 }
