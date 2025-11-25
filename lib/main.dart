@@ -5,12 +5,10 @@ import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'screens/launch_screen.dart'; // Import the new LaunchScreen
 import 'utils/app_colors.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await dotenv.load(fileName: "assets/companion.env");
   runApp(const SyloApp());
 }
 

@@ -3,11 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart'; // IMPORT THIS
 import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-// --- CONFIGURATION ---
-// Your OpenRouter API Key
-final String _kApiKey = dotenv.env['SYLO_API_KEY'] ?? "";
+import '../utils/env.dart';
 
 // --- VISUAL CONSTANTS ---
 const Offset kDefaultSyloOwlOffset = Offset(-0.2, -0.77);
@@ -81,13 +78,31 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
     });
     _scrollToBottom();
 
+    final String apiKey = Env.grokKey;
+    if (apiKey.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _isTyping = false;
+          _messages.add(
+            ChatMessage(
+              text:
+                  'GROK_KEY is missing. Restart the app with --dart-define=GROK_KEY=your_grok_key.',
+              isUser: false,
+            ),
+          );
+        });
+        _scrollToBottom();
+      }
+      return;
+    }
+
     try {
       // --- OPENROUTER API LOGIC ---
       final response = await http.post(
         Uri.parse('https://openrouter.ai/api/v1/chat/completions'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_kApiKey',
+          'Authorization': 'Bearer $apiKey',
           'HTTP-Referer': 'https://sylo.app',
           'X-Title': 'Sylo Chat',
         },
