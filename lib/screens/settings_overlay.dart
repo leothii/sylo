@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/app_colors.dart';
 import '../utils/smooth_page.dart';
-import '../utils/streak_service.dart'; // Make sure this import is here
+import '../utils/streak_service.dart'; // Make sure this import exists
 import '../widgets/streak_overlay.dart';
 import '../widgets/exit_overlay.dart';
 import '../screens/about_page.dart';
@@ -76,30 +76,29 @@ class SettingsOverlay extends StatelessWidget {
                   ),
                   const SizedBox(height: 15),
 
-                  // --- STREAK BUTTON (FIXED HERE) ---
+                  // --- STREAK BUTTON (UPDATED) ---
                   _buildOverlayButton(
                     context,
                     'streak',
                     const Color(0xFFF7DB9F),
                     const Color(0xFF8B0000),
                     () async {
-                      // 1. Close settings
+                      // 1. Close settings overlay
                       Navigator.of(context).pop();
 
-                      // 2. Fetch Data
+                      // 2. Fetch correct data
                       final int count = await StreakService.getStreakCount();
                       final Set<int> activeDays =
                           await StreakService.getActiveWeekdays();
 
                       if (context.mounted) {
-                        // 3. Show Overlay with ALL required data
+                        // 3. Show Streak Overlay with correct params
                         showDialog(
                           context: context,
                           barrierColor: Colors.black.withOpacity(0.6),
                           builder: (context) => StreakOverlay(
-                            currentStreak: count == 0 ? 1 : count,
-                            activeWeekdays:
-                                activeDays, // <--- This was missing!
+                            currentStreak: count, // Pass exact count (0 if 0)
+                            activeWeekdays: activeDays, // Pass the Set<int>
                           ),
                         );
                       }

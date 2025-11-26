@@ -4,9 +4,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../utils/app_colors.dart';
+import '../utils/streak_service.dart'; // <--- 1. ADDED IMPORT
 import '../widgets/audio_card.dart';
 import '../widgets/sylo_chat_overlay.dart';
-import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute
+import '../utils/smooth_page.dart';
 import 'settings_overlay.dart';
 import 'summary_page.dart';
 import 'notes_page.dart';
@@ -24,6 +25,31 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final TextEditingController _interestController = TextEditingController();
   String? _selectedFileName;
+
+  // --- 2. ADDED STATE VARIABLES ---
+  int _streakCount = 0;
+  bool _hasChattedToday = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStreakData(); // <--- Load data on startup
+  }
+
+  // --- 3. ADDED DATA FETCHING ---
+  Future<void> _loadStreakData() async {
+    // This assumes you added hasChattedToday() to your StreakService
+    // If you haven't, add it to lib/utils/streak_service.dart!
+    final count = await StreakService.getStreakCount();
+    final hasChatted = await StreakService.hasChattedToday();
+
+    if (mounted) {
+      setState(() {
+        _streakCount = count;
+        _hasChattedToday = hasChatted;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,12 +96,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildTopBar() {
+    // --- 4. FLAME COLOR LOGIC ---
+    // If chatted today -> Orange. If not -> Pale Grey.
+    final Color flameColor = _hasChattedToday
+        ? const Color(0xFFFFA000) // Orange
+        : const Color(0xFFAAAAAA); // Pale Grey
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Column(
           children: [
-            // --- UPDATED PROFILE ICON ---
             _IconBadge(
               assetPath: 'assets/icons/profile.png',
               size: 30,
@@ -98,6 +129,37 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         const Spacer(),
+
+        // --- 5. NEW FLAME INDICATOR ---
+        Container(
+          margin: const EdgeInsets.only(right: 12, top: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.local_fire_department_rounded,
+                color: flameColor,
+                size: 20,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$_streakCount',
+                style: TextStyle(
+                  fontFamily: 'Bungee',
+                  fontSize: 16,
+                  color: flameColor,
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // -----------------------------
         Column(
           children: [
             _IconBadge(
@@ -160,13 +222,11 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      // --- ANALYZE BUTTON (Smooth Transition) ---
                       _ActionButton(
                         label: 'analyze',
                         icon: Icons.lightbulb_outline,
                         onTap: _openSummary,
                       ),
-                      // --- QUIZ BUTTON (Smooth Transition) ---
                       _ActionButton(
                         label: 'try quiz',
                         icon: Icons.help_outline,
@@ -179,12 +239,16 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // --- OWL WITH CHAT OVERLAY TRIGGER ---
+          // --- 6. UPDATED OWL TAP TO REFRESH STREAK ---
           Positioned(
             top: -42,
             left: -10,
             child: GestureDetector(
-              onTap: () => showSyloChatOverlay(context),
+              onTap: () async {
+                await showSyloChatOverlay(context);
+                // When chat closes, refresh the flame to see if it turns Orange
+                _loadStreakData();
+              },
               child: Image.asset(
                 'assets/images/sylo.png',
                 height: 160,
@@ -192,8 +256,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-
-          // -------------------------------------
+          // -------------------------------------------
         ],
       ),
     );
@@ -204,18 +267,17 @@ class _HomePageState extends State<HomePage> {
     if (rawText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content:
-              Text('Please enter some study material or attach a document.'),
+          content: Text(
+            'Please enter some study material or attach a document.',
+          ),
         ),
       );
       return;
     }
 
-    Navigator.of(context).push(
-      SmoothPageRoute(
-        builder: (_) => SummaryPage(sourceText: rawText),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(SmoothPageRoute(builder: (_) => SummaryPage(sourceText: rawText)));
   }
 
   void _openQuiz() {
@@ -223,18 +285,17 @@ class _HomePageState extends State<HomePage> {
     if (rawText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content:
-              Text('Please enter some study material or attach a document.'),
+          content: Text(
+            'Please enter some study material or attach a document.',
+          ),
         ),
       );
       return;
     }
 
-    Navigator.of(context).push(
-      SmoothPageRoute(
-        builder: (_) => QuizPage(sourceText: rawText),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(SmoothPageRoute(builder: (_) => QuizPage(sourceText: rawText)));
   }
 
   Widget _buildSearchField() {

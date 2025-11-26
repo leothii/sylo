@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 class StreakOverlay extends StatelessWidget {
   const StreakOverlay({
     super.key,
-    this.currentStreak = 1,
-    required this.activeWeekdays, // <--- Added this so we know which dots to fill
+    this.currentStreak = 0, // Starts at 0
+    required this.activeWeekdays,
   });
 
   final int currentStreak;
@@ -17,16 +17,26 @@ class StreakOverlay extends StatelessWidget {
   static const Color _colTitleRed = Color(0xFF882124);
   static const Color _colTextGrey = Color(0xFF5A5A5A);
   static const Color _colFireOrange = Color(0xFFFFA000);
+  static const Color _colPaleGrey = Color(0xFFAAAAAA); // Only for the Flame
 
   @override
   Widget build(BuildContext context) {
+    // CHECK: Is TODAY in the list of active days?
+    final int todayWeekday = DateTime.now().weekday;
+    final bool isChattedToday = activeWeekdays.contains(todayWeekday);
+
+    // LOGIC:
+    // 1. Flame: Pale if inactive, Orange if active.
+    // 2. Text: ALWAYS Red (as requested).
+    final Color flameColor = isChattedToday ? _colFireOrange : _colPaleGrey;
+    const Color titleColor = _colTitleRed;
+
     return Dialog(
       backgroundColor: Colors.transparent,
       elevation: 0,
       insetPadding: const EdgeInsets.symmetric(horizontal: 24),
       child: Container(
         width: double.infinity,
-        // The Outer Beige Card
         decoration: BoxDecoration(
           color: _colCardBg,
           borderRadius: BorderRadius.circular(24),
@@ -43,7 +53,6 @@ class StreakOverlay extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // The Inner Creamy White Card
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
@@ -56,33 +65,33 @@ class StreakOverlay extends StatelessWidget {
                 children: [
                   const SizedBox(height: 10),
 
-                  // 1. FIRE ICON
-                  const Icon(
+                  // 1. FLAME ICON (Changes Color: Pale vs Orange)
+                  Icon(
                     Icons.local_fire_department_rounded,
                     size: 80,
-                    color: _colFireOrange,
+                    color: flameColor,
                   ),
 
                   const SizedBox(height: 10),
 
-                  // 2. DYNAMIC STREAK TEXT
+                  // 2. STREAK NUMBER (Always Red)
                   Text(
                     '$currentStreak DAYS',
                     style: const TextStyle(
                       fontFamily: 'Bungee',
                       fontSize: 48,
                       height: 1.0,
-                      color: _colTitleRed,
+                      color: titleColor,
                     ),
                   ),
 
-                  // 3. "STREAK"
+                  // 3. "STREAK" LABEL (Always Red)
                   const Text(
                     'STREAK',
                     style: TextStyle(
                       fontFamily: 'Bungee',
                       fontSize: 28,
-                      color: _colTitleRed,
+                      color: titleColor,
                       letterSpacing: 1.2,
                     ),
                   ),
@@ -112,8 +121,6 @@ class StreakOverlay extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 15),
-
-                        // Days Row - DYNAMICALLY FILLED
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -194,7 +201,6 @@ class StreakOverlay extends StatelessWidget {
   }
 }
 
-// --- Helper Widget for Simplified Circles (UNCHANGED) ---
 class _DayIndicator extends StatelessWidget {
   final String label;
   final bool isFilled;
@@ -207,7 +213,7 @@ class _DayIndicator extends StatelessWidget {
       children: [
         Icon(
           isFilled ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-          color: const Color(0xFF5A5A5A),
+          color: isFilled ? const Color(0xFFFFA000) : const Color(0xFF5A5A5A),
           size: 28,
         ),
         const SizedBox(height: 6),

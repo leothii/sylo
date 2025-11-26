@@ -5,7 +5,7 @@ class StreakService {
   static const String _keyLastDate = 'sylo_last_streak_date';
   static const String _keyActiveDates = 'sylo_active_dates_list';
 
-  // This is the method the error says is missing
+  // Updates the streak when a user chats
   static Future<bool> updateStreak() async {
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
@@ -53,13 +53,13 @@ class StreakService {
     await prefs.setStringList(_keyActiveDates, activeDates);
   }
 
-  // This is the other missing method
+  // Returns the total streak count
   static Future<int> getStreakCount() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_keyStreakCount) ?? 0;
   }
 
-  // This is the third missing method
+  // Returns the active days for the weekly dots
   static Future<Set<int>> getActiveWeekdays() async {
     final prefs = await SharedPreferences.getInstance();
     final activeStrings = prefs.getStringList(_keyActiveDates) ?? [];
@@ -73,5 +73,19 @@ class StreakService {
       }
     }
     return activeWeekdays;
+  }
+
+  // --- NEW METHOD ADDED HERE ---
+  /// Returns true if the user has already chatted TODAY.
+  static Future<bool> hasChattedToday() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastDateStr = prefs.getString(_keyLastDate);
+    if (lastDateStr == null) return false;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final lastDate = DateTime.parse(lastDateStr);
+
+    return today.isAtSameMomentAs(lastDate);
   }
 }
