@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 
 class StreakOverlay extends StatelessWidget {
-  const StreakOverlay({super.key, this.currentStreak = 1});
+  const StreakOverlay({
+    super.key,
+    this.currentStreak = 1,
+    required this.activeWeekdays, // <--- Added this so we know which dots to fill
+  });
 
   final int currentStreak;
+  final Set<int> activeWeekdays;
 
   // --- Color Palette ---
   static const Color _colCardBg = Color(0xFFF7DB9F);
   static const Color _colInnerCard = Color(0xFFF8EFDC);
-  static const Color _colWeeklyBox = Color(0xFFE1B964); // Darker gold/brown
-  static const Color _colTitleRed = Color(0xFF882124); // The dark red text
+  static const Color _colWeeklyBox = Color(0xFFE1B964);
+  static const Color _colTitleRed = Color(0xFF882124);
   static const Color _colTextGrey = Color(0xFF5A5A5A);
   static const Color _colFireOrange = Color(0xFFFFA000);
 
@@ -60,7 +65,7 @@ class StreakOverlay extends StatelessWidget {
 
                   const SizedBox(height: 10),
 
-                  // 2. "1 DAYS" (Big Text)
+                  // 2. DYNAMIC STREAK TEXT
                   Text(
                     '$currentStreak DAYS',
                     style: const TextStyle(
@@ -71,7 +76,7 @@ class StreakOverlay extends StatelessWidget {
                     ),
                   ),
 
-                  // 3. "STREAK" (Smaller Text, Below)
+                  // 3. "STREAK"
                   const Text(
                     'STREAK',
                     style: TextStyle(
@@ -108,17 +113,38 @@ class StreakOverlay extends StatelessWidget {
                         ),
                         const SizedBox(height: 15),
 
-                        // Days Row
+                        // Days Row - DYNAMICALLY FILLED
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: const [
-                            _DayIndicator(label: 'SUN', isFilled: true),
-                            _DayIndicator(label: 'MON', isFilled: true),
-                            _DayIndicator(label: 'TUE', isFilled: true),
-                            _DayIndicator(label: 'WED', isFilled: true),
-                            _DayIndicator(label: 'THU', isFilled: true),
-                            _DayIndicator(label: 'FRI', isFilled: true),
-                            _DayIndicator(label: 'SAT', isFilled: true),
+                          children: [
+                            _DayIndicator(
+                              label: 'SUN',
+                              isFilled: activeWeekdays.contains(7),
+                            ),
+                            _DayIndicator(
+                              label: 'MON',
+                              isFilled: activeWeekdays.contains(1),
+                            ),
+                            _DayIndicator(
+                              label: 'TUE',
+                              isFilled: activeWeekdays.contains(2),
+                            ),
+                            _DayIndicator(
+                              label: 'WED',
+                              isFilled: activeWeekdays.contains(3),
+                            ),
+                            _DayIndicator(
+                              label: 'THU',
+                              isFilled: activeWeekdays.contains(4),
+                            ),
+                            _DayIndicator(
+                              label: 'FRI',
+                              isFilled: activeWeekdays.contains(5),
+                            ),
+                            _DayIndicator(
+                              label: 'SAT',
+                              isFilled: activeWeekdays.contains(6),
+                            ),
                           ],
                         ),
                       ],
@@ -168,7 +194,7 @@ class StreakOverlay extends StatelessWidget {
   }
 }
 
-// --- Helper Widget for Simplified Circles ---
+// --- Helper Widget for Simplified Circles (UNCHANGED) ---
 class _DayIndicator extends StatelessWidget {
   final String label;
   final bool isFilled;
@@ -179,7 +205,6 @@ class _DayIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        // Simplified Concentric Circle (Target style)
         Icon(
           isFilled ? Icons.radio_button_checked : Icons.radio_button_unchecked,
           color: const Color(0xFF5A5A5A),

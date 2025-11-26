@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart'; // IMPORT THIS
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart' as http;
 
 import '../utils/env.dart';
+// --- NEW IMPORTS FOR STREAK ---
+import '../utils/streak_service.dart';
+import '../widgets/streak_overlay.dart';
 
 // --- VISUAL CONSTANTS ---
 const Offset kDefaultSyloOwlOffset = Offset(-0.2, -0.77);
@@ -67,6 +70,27 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
     super.dispose();
   }
 
+  // --- NEW STREAK CHECKER METHOD ---
+  Future<void> _checkStreak() async {
+    // 1. Try to update the streak
+    bool streakUpdated = await StreakService.updateStreak();
+
+    // 2. If updated, show the overlay
+    if (streakUpdated && mounted) {
+      // 3. Fetch fresh data
+      int newCount = await StreakService.getStreakCount();
+      Set<int> activeDays = await StreakService.getActiveWeekdays();
+
+      // 4. Show the Dialog
+      showDialog(
+        context: context,
+        barrierColor: Colors.black.withOpacity(0.6),
+        builder: (_) =>
+            StreakOverlay(currentStreak: newCount, activeWeekdays: activeDays),
+      );
+    }
+  }
+
   Future<void> _handleSubmitted(String text) async {
     if (text.trim().isEmpty) return;
 
@@ -77,6 +101,10 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
       _isTyping = true;
     });
     _scrollToBottom();
+
+    // --- TRIGGER STREAK LOGIC HERE ---
+    _checkStreak();
+    // --------------------------------
 
     final String apiKey = Env.grokKey;
     if (apiKey.isEmpty) {
@@ -386,16 +414,7 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
-                                GestureDetector(
-                                  onTap: () =>
-                                      _handleSubmitted(_textController.text),
-                                  child: Image.asset(
-                                    'assets/icons/attachment.png',
-                                    width: 22,
-                                    height: 22,
-                                  ),
-                                ),
+                                // REMOVED ATTACHMENT ICON FROM HERE
                               ],
                             ),
                           ),
