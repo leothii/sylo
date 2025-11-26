@@ -4,9 +4,10 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 import '../utils/app_colors.dart';
-import '../utils/streak_service.dart'; // <--- 1. ADDED IMPORT
+import '../utils/streak_service.dart';
 import '../widgets/audio_card.dart';
 import '../widgets/sylo_chat_overlay.dart';
+import '../widgets/streak_overlay.dart'; // Required for the popup
 import '../utils/smooth_page.dart';
 import 'settings_overlay.dart';
 import 'summary_page.dart';
@@ -26,20 +27,17 @@ class _HomePageState extends State<HomePage> {
   final TextEditingController _interestController = TextEditingController();
   String? _selectedFileName;
 
-  // --- 2. ADDED STATE VARIABLES ---
   int _streakCount = 0;
   bool _hasChattedToday = false;
 
   @override
   void initState() {
     super.initState();
-    _loadStreakData(); // <--- Load data on startup
+    _loadStreakData();
   }
 
-  // --- 3. ADDED DATA FETCHING ---
+  // Fetch data from storage
   Future<void> _loadStreakData() async {
-    // This assumes you added hasChattedToday() to your StreakService
-    // If you haven't, add it to lib/utils/streak_service.dart!
     final count = await StreakService.getStreakCount();
     final hasChatted = await StreakService.hasChattedToday();
 
@@ -48,6 +46,25 @@ class _HomePageState extends State<HomePage> {
         _streakCount = count;
         _hasChattedToday = hasChatted;
       });
+    }
+  }
+
+  // Helper to handle Analyze button streak logic
+  Future<void> _triggerStreakUpdate() async {
+    bool streakUpdated = await StreakService.updateStreak();
+
+    if (streakUpdated && mounted) {
+      int newCount = await StreakService.getStreakCount();
+      Set<int> activeDays = await StreakService.getActiveWeekdays();
+
+      await showSmoothDialog(
+        context: context,
+        builder: (_) =>
+            StreakOverlay(currentStreak: newCount, activeWeekdays: activeDays),
+      );
+
+      // Refresh flame immediately
+      _loadStreakData();
     }
   }
 
@@ -92,12 +109,13 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _openSettingsOverlay() {
-    showDialog(context: context, builder: (context) => const SettingsOverlay());
+    showDialog(
+      context: context,
+      builder: (context) => const SettingsOverlay(),
+    ).then((_) => _loadStreakData()); // Refresh in case reset button was used
   }
 
   Widget _buildTopBar() {
-    // --- 4. FLAME COLOR LOGIC ---
-    // If chatted today -> Orange. If not -> Pale Grey.
     final Color flameColor = _hasChattedToday
         ? const Color(0xFFFFA000) // Orange
         : const Color(0xFFAAAAAA); // Pale Grey
@@ -130,7 +148,7 @@ class _HomePageState extends State<HomePage> {
         ),
         const Spacer(),
 
-        // --- 5. NEW FLAME INDICATOR ---
+        // --- FLAME INDICATOR ---
         Container(
           margin: const EdgeInsets.only(right: 12, top: 4),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -159,7 +177,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
 
-        // -----------------------------
+        // -----------------------
         Column(
           children: [
             _IconBadge(
@@ -238,15 +256,13 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-
-          // --- 6. UPDATED OWL TAP TO REFRESH STREAK ---
           Positioned(
             top: -42,
             left: -10,
             child: GestureDetector(
               onTap: () async {
                 await showSyloChatOverlay(context);
-                // When chat closes, refresh the flame to see if it turns Orange
+                // Refresh flame after chat closes
                 _loadStreakData();
               },
               child: Image.asset(
@@ -256,13 +272,13 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
-          // -------------------------------------------
         ],
       ),
     );
   }
 
-  void _openSummary() {
+  // --- REFRESH FIX HERE ---
+  void _openSummary() async {
     final String rawText = _interestController.text.trim();
     if (rawText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -275,11 +291,18 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    Navigator.of(
-      context,
-    ).push(SmoothPageRoute(builder: (_) => SummaryPage(sourceText: rawText)));
+    await _triggerStreakUpdate();
+
+    if (mounted) {
+      Navigator.of(context)
+          .push(
+            SmoothPageRoute(builder: (_) => SummaryPage(sourceText: rawText)),
+          )
+          .then((_) => _loadStreakData()); // Refresh when returning
+    }
   }
 
+  // --- REFRESH FIX HERE ---
   void _openQuiz() {
     final String rawText = _interestController.text.trim();
     if (rawText.isEmpty) {
@@ -293,9 +316,9 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    Navigator.of(
-      context,
-    ).push(SmoothPageRoute(builder: (_) => QuizPage(sourceText: rawText)));
+    Navigator.of(context)
+        .push(SmoothPageRoute(builder: (_) => QuizPage(sourceText: rawText)))
+        .then((_) => _loadStreakData()); // Refresh when returning
   }
 
   Widget _buildSearchField() {
@@ -359,8 +382,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _openFilePicker() async {
-    const int maxBytes = 10 * 1024 * 1024; // 10 MB
-
+    const int maxBytes = 10 * 1024 * 1024;
     final List<String> allowedExtensions = [
       'pdf',
       'doc',
@@ -383,9 +405,7 @@ class _HomePageState extends State<HomePage> {
         allowMultiple: false,
       );
 
-      if (!mounted || result == null || result.files.isEmpty) {
-        return;
-      }
+      if (!mounted || result == null || result.files.isEmpty) return;
 
       final PlatformFile file = result.files.single;
       final int size = file.size;
@@ -410,7 +430,6 @@ class _HomePageState extends State<HomePage> {
       ).showSnackBar(SnackBar(content: Text('Selected "${file.name}"')));
     } catch (error) {
       debugPrint('File picker error: $error');
-
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -423,7 +442,6 @@ class _HomePageState extends State<HomePage> {
 
 class _ActionButton extends StatelessWidget {
   const _ActionButton({required this.label, required this.icon, this.onTap});
-
   final String label;
   final IconData icon;
   final VoidCallback? onTap;
@@ -461,11 +479,7 @@ class _ActionButton extends StatelessWidget {
         ],
       ),
     );
-
-    if (onTap == null) {
-      return buttonContent;
-    }
-
+    if (onTap == null) return buttonContent;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -479,7 +493,6 @@ class _ActionButton extends StatelessWidget {
 
 class _IconBadge extends StatelessWidget {
   const _IconBadge({required this.assetPath, this.size = 44, this.onTap});
-
   final String assetPath;
   final double size;
   final VoidCallback? onTap;
@@ -492,7 +505,6 @@ class _IconBadge extends StatelessWidget {
       height: size,
       fit: BoxFit.contain,
     );
-
     if (onTap == null) {
       return SizedBox(
         height: size,
@@ -500,7 +512,6 @@ class _IconBadge extends StatelessWidget {
         child: Center(child: image),
       );
     }
-
     return SizedBox(
       height: size,
       width: size,

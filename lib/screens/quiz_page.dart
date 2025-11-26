@@ -1,13 +1,14 @@
-// lib/screens/quiz_page.dart
-
 import 'package:flutter/material.dart';
 import 'score_page.dart';
 import 'settings_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
-import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute
+import '../utils/smooth_page.dart'; // For showSmoothDialog & SmoothPageRoute
 import '../services/ai_service.dart';
 
-// --- NEW IMPORTS ---
+// --- NEW IMPORTS FOR STREAK ---
+import '../utils/streak_service.dart';
+import '../widgets/streak_overlay.dart';
+
 import 'music_page.dart';
 import 'profile_page.dart';
 import 'home_page.dart';
@@ -27,7 +28,7 @@ class _QuizPageState extends State<QuizPage> {
   final double _cardTopPosition = 120;
   final double _owlVerticalOffset = -110;
 
-  // --- Color Palette (From Figma) ---
+  // --- Color Palette ---
   static const Color _colBackgroundBlue = Color(0xFF8AABC7);
   static const Color _colCardGold = Color(0xFFF7DB9F);
   static const Color _colQuestionBg = Color(0xFFF8EFDC);
@@ -35,9 +36,8 @@ class _QuizPageState extends State<QuizPage> {
   static const Color _colTextGrey = Color(0xFF676767);
   static const Color _colOptionGrey = Color(0xFF898989);
   static const Color _colBtnShadow = Color(0x3F000000);
-
-  // Define the nav color here for consistency (same hex as your previous code)
   static const Color _colNavItem = Color(0xFFE1B964);
+
   final AIService _aiService = AIService();
   List<QuizQuestion> _questions = <QuizQuestion>[];
   String? _errorMessage;
@@ -50,6 +50,24 @@ class _QuizPageState extends State<QuizPage> {
   void initState() {
     super.initState();
     _loadQuiz();
+  }
+
+  // --- STREAK HELPER ---
+  Future<void> _triggerStreakUpdate() async {
+    // 1. Update Streak
+    bool streakUpdated = await StreakService.updateStreak();
+
+    // 2. If new day, show overlay
+    if (streakUpdated && mounted) {
+      int newCount = await StreakService.getStreakCount();
+      Set<int> activeDays = await StreakService.getActiveWeekdays();
+
+      await showSmoothDialog(
+        context: context,
+        builder: (_) =>
+            StreakOverlay(currentStreak: newCount, activeWeekdays: activeDays),
+      );
+    }
   }
 
   Widget _buildQuizBody() {
@@ -122,8 +140,9 @@ class _QuizPageState extends State<QuizPage> {
     });
 
     try {
-      final List<QuizQuestion> questions =
-          await _aiService.generateQuiz(widget.sourceText);
+      final List<QuizQuestion> questions = await _aiService.generateQuiz(
+        widget.sourceText,
+      );
       if (!mounted) return;
       setState(() {
         _questions = questions;
@@ -146,43 +165,35 @@ class _QuizPageState extends State<QuizPage> {
     return Scaffold(
       backgroundColor: _colBackgroundBlue,
 
-      // --- UPDATED BOTTOM NAVIGATION BAR ---
+      // --- BOTTOM NAV ---
       bottomNavigationBar: Container(
         height: 80,
         color: _colBackgroundBlue,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // 1. Profile Icon -> Navigates to ProfilePage
             GestureDetector(
               onTap: () {
-                Navigator.of(context).push(
-                  SmoothPageRoute(builder: (_) => const ProfilePage()),
-                ); // <--- Smooth
+                Navigator.of(
+                  context,
+                ).push(SmoothPageRoute(builder: (_) => const ProfilePage()));
               },
               child: const Icon(Icons.person, color: _colNavItem, size: 32),
             ),
-
-            // 2. Home Icon -> Navigates back to HomePage
             GestureDetector(
               onTap: () {
                 Navigator.of(context).pushAndRemoveUntil(
-                  SmoothPageRoute(
-                    builder: (_) => const HomePage(),
-                  ), // <--- Smooth
+                  SmoothPageRoute(builder: (_) => const HomePage()),
                   (route) => false,
                 );
               },
-              // UPDATED: Removed the Container/Background. Just the icon now.
               child: const Icon(Icons.home, color: _colNavItem, size: 32),
             ),
-
-            // 3. Music Icon -> Navigates to MusicPage
             GestureDetector(
               onTap: () {
-                Navigator.of(context).push(
-                  SmoothPageRoute(builder: (_) => const MusicPage()),
-                ); // <--- Smooth
+                Navigator.of(
+                  context,
+                ).push(SmoothPageRoute(builder: (_) => const MusicPage()));
               },
               child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
             ),
@@ -194,7 +205,7 @@ class _QuizPageState extends State<QuizPage> {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // --- 1. THE MAIN GOLD CARD ---
+            // --- MAIN CARD ---
             Positioned(
               top: _cardTopPosition,
               bottom: 20,
@@ -203,7 +214,6 @@ class _QuizPageState extends State<QuizPage> {
               child: Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // The Actual Card Container
                   Container(
                     decoration: BoxDecoration(
                       color: _colCardGold,
@@ -212,7 +222,6 @@ class _QuizPageState extends State<QuizPage> {
                     ),
                     child: Column(
                       children: [
-                        // Header Section
                         Padding(
                           padding: const EdgeInsets.fromLTRB(24, 50, 24, 10),
                           child: Row(
@@ -240,14 +249,11 @@ class _QuizPageState extends State<QuizPage> {
                             ],
                           ),
                         ),
-
-                        // Scrollable Question List
                         Expanded(child: _buildQuizBody()),
                       ],
                     ),
                   ),
 
-                  // --- DECORATION: Red "Bookmark" on the right ---
                   Positioned(
                     right: -4,
                     top: 40,
@@ -261,15 +267,18 @@ class _QuizPageState extends State<QuizPage> {
                     ),
                   ),
 
-                  // --- SUBMIT BUTTON (Floating Bottom Right) ---
+                  // --- SUBMIT BUTTON ---
                   Positioned(
                     bottom: 20,
                     right: 20,
                     child: Builder(
                       builder: (BuildContext context) {
-                        final bool canSubmit = !_isLoading && !_isSubmitting &&
+                        final bool canSubmit =
+                            !_isLoading &&
+                            !_isSubmitting &&
                             _questions.isNotEmpty &&
                             _selectedOptions.length == _questions.length;
+
                         return GestureDetector(
                           onTap: canSubmit
                               ? () async {
@@ -277,29 +286,40 @@ class _QuizPageState extends State<QuizPage> {
                                     _isSubmitting = true;
                                   });
 
+                                  // ------------------------------------------
+                                  // 1. TRIGGER STREAK (New Logic)
+                                  // ------------------------------------------
+                                  await _triggerStreakUpdate();
+
+                                  // 2. Calculate Score
                                   final int total = _questions.length;
                                   final int correct = _questions
                                       .asMap()
                                       .entries
-                                      .where((MapEntry<int, QuizQuestion> entry) {
-                                    final int index = entry.key;
-                                    final QuizQuestion question = entry.value;
-                                    final int? selected =
-                                        _selectedOptions[index];
-                                    final int? expected =
-                                        question.correctOptionIndex;
-                                    return selected != null &&
-                                        expected != null &&
-                                        selected == expected;
-                                  }).length;
+                                      .where((
+                                        MapEntry<int, QuizQuestion> entry,
+                                      ) {
+                                        final int index = entry.key;
+                                        final QuizQuestion question =
+                                            entry.value;
+                                        final int? selected =
+                                            _selectedOptions[index];
+                                        final int? expected =
+                                            question.correctOptionIndex;
+                                        return selected != null &&
+                                            expected != null &&
+                                            selected == expected;
+                                      })
+                                      .length;
 
+                                  // 3. Get AI Summary & Navigate
                                   try {
                                     final QuizResultsSummary summary =
                                         await _aiService.buildQuizSummary(
-                                      content: widget.sourceText,
-                                      total: total,
-                                      correct: correct,
-                                    );
+                                          content: widget.sourceText,
+                                          total: total,
+                                          correct: correct,
+                                        );
 
                                     if (!mounted) return;
 
@@ -307,37 +327,40 @@ class _QuizPageState extends State<QuizPage> {
                                       SmoothPageRoute(
                                         builder: (BuildContext context) =>
                                             ScorePage(
-                                          correct: correct,
-                                          total: total,
-                                          summary: summary,
-                                          questions: _questions,
-                                          selections:
-                                              Map<int, int>.from(_selectedOptions),
-                                        ),
+                                              correct: correct,
+                                              total: total,
+                                              summary: summary,
+                                              questions: _questions,
+                                              selections: Map<int, int>.from(
+                                                _selectedOptions,
+                                              ),
+                                            ),
                                       ),
                                     );
                                   } catch (error) {
                                     if (!mounted) return;
-                                    final QuizResultsSummary fallback =
-                                        QuizResultsSummary(
+                                    // Fallback if AI fails
+                                    final QuizResultsSummary
+                                    fallback = QuizResultsSummary(
                                       quote:
                                           'Success is the sum of small efforts, repeated day in and day out.',
                                       author: 'Robert Collier',
                                       feedback:
-                                          'Great work completing the quiz! Review the questions you missed and try again when you are ready.',
+                                          'Great work completing the quiz! Review the questions you missed and try again.',
                                     );
 
                                     Navigator.of(context).push(
                                       SmoothPageRoute(
                                         builder: (BuildContext context) =>
                                             ScorePage(
-                                          correct: correct,
-                                          total: total,
-                                          summary: fallback,
-                                          questions: _questions,
-                                          selections:
-                                              Map<int, int>.from(_selectedOptions),
-                                        ),
+                                              correct: correct,
+                                              total: total,
+                                              summary: fallback,
+                                              questions: _questions,
+                                              selections: Map<int, int>.from(
+                                                _selectedOptions,
+                                              ),
+                                            ),
                                       ),
                                     );
                                   } finally {
@@ -386,12 +409,11 @@ class _QuizPageState extends State<QuizPage> {
               ),
             ),
 
-            // --- 2. THE OWL IMAGE (MOVED LEFT) ---
+            // --- OWL IMAGE ---
             Positioned(
               top: _cardTopPosition + _owlVerticalOffset,
               left: 10,
               child: GestureDetector(
-                // Opens the Sylo Chat Overlay when the owl is pressed
                 onTap: () => showSyloChatOverlay(context),
                 child: Image.asset(
                   'assets/images/sylo.png',
@@ -401,9 +423,7 @@ class _QuizPageState extends State<QuizPage> {
               ),
             ),
 
-            // --- 3. FLOATING ICONS (Top Right) ---
-
-            // SETTINGS ICON (With Overlay Trigger)
+            // --- SETTINGS ICON ---
             Positioned(
               top: 10,
               right: 20,
@@ -422,7 +442,7 @@ class _QuizPageState extends State<QuizPage> {
               ),
             ),
 
-            // VOLUME ICON
+            // --- VOLUME ICON ---
             Positioned(
               top: 50,
               right: 20,
@@ -466,65 +486,61 @@ class _QuizPageState extends State<QuizPage> {
           ),
           const SizedBox(height: 16),
           Column(
-            children: List<Widget>.generate(
-              question.options.length,
-              (int optionIndex) {
-                final bool isSelected = selectedOptionIndex == optionIndex;
-                final String label = question.options[optionIndex];
+            children: List<Widget>.generate(question.options.length, (
+              int optionIndex,
+            ) {
+              final bool isSelected = selectedOptionIndex == optionIndex;
+              final String label = question.options[optionIndex];
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedOptions[index] = optionIndex;
-                      });
-                    },
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 22,
-                          height: 22,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: _colOptionGrey,
-                              width: 2,
-                            ),
-                          ),
-                          child: isSelected
-                              ? Center(
-                                  child: Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: const BoxDecoration(
-                                      color: _colTextGrey,
-                                      shape: BoxShape.circle,
-                                    ),
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedOptions[index] = optionIndex;
+                    });
+                  },
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: _colOptionGrey, width: 2),
+                        ),
+                        child: isSelected
+                            ? Center(
+                                child: Container(
+                                  width: 12,
+                                  height: 12,
+                                  decoration: const BoxDecoration(
+                                    color: _colTextGrey,
+                                    shape: BoxShape.circle,
                                   ),
-                                )
-                              : null,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            label,
-                            style: const TextStyle(
-                              color: _colOptionGrey,
-                              fontSize: 13,
-                              fontFamily: 'Quicksand',
-                              fontWeight: FontWeight.w600,
-                              height: 1.4,
-                            ),
+                                ),
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: const TextStyle(
+                            color: _colOptionGrey,
+                            fontSize: 13,
+                            fontFamily: 'Quicksand',
+                            fontWeight: FontWeight.w600,
+                            height: 1.4,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                );
-              },
-            ),
+                ),
+              );
+            }),
           ),
         ],
       ),

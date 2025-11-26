@@ -89,7 +89,9 @@ class _LoginPageState extends State<LoginPage> {
                             Shadow(
                               offset: const Offset(0, 4),
                               blurRadius: 4,
-                              color: const Color(0xFF000000).withValues(alpha: 0.25),
+                              color: const Color(
+                                0xFF000000,
+                              ).withValues(alpha: 0.25),
                             ),
                           ],
                         ),
@@ -105,7 +107,9 @@ class _LoginPageState extends State<LoginPage> {
                             Shadow(
                               offset: const Offset(0, 4),
                               blurRadius: 4,
-                              color: const Color(0xFF000000).withValues(alpha: 0.25),
+                              color: const Color(
+                                0xFF000000,
+                              ).withValues(alpha: 0.25),
                             ),
                           ],
                         ),
@@ -298,7 +302,9 @@ class _LoginPageState extends State<LoginPage> {
                               height: 22,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5,
-                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF882124)),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(0xFF882124),
+                                ),
                               ),
                             )
                           : const Text(
@@ -362,7 +368,9 @@ class _LoginPageState extends State<LoginPage> {
                         ? null
                         : () {
                             Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const SignUpPage()),
+                              MaterialPageRoute(
+                                builder: (_) => const SignUpPage(),
+                              ),
                             );
                           },
                     borderRadius: BorderRadius.circular(10),
@@ -407,9 +415,9 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomePage()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const HomePage()));
     } on FirebaseAuthException catch (error) {
       _showMessage(_mapAuthError(error));
     } catch (_) {

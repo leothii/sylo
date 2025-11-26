@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // <--- Import for Auth
 import '../utils/app_colors.dart';
 import '../utils/smooth_page.dart';
-import '../utils/streak_service.dart'; // Make sure this import exists
+import '../utils/streak_service.dart';
 import '../widgets/streak_overlay.dart';
 import '../widgets/exit_overlay.dart';
 import '../screens/about_page.dart';
 import '../screens/notes_page.dart';
+import '../screens/login_page.dart'; // <--- Import your Login Page
+import '../widgets/logout_overlay.dart';
 
 class SettingsOverlay extends StatelessWidget {
   const SettingsOverlay({super.key});
@@ -21,7 +24,8 @@ class SettingsOverlay extends StatelessWidget {
         children: [
           Container(
             width: 217,
-            height: 328,
+            // Increased height slightly to accommodate the new button
+            height: 380,
             margin: const EdgeInsets.only(top: 60),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
@@ -76,29 +80,26 @@ class SettingsOverlay extends StatelessWidget {
                   ),
                   const SizedBox(height: 15),
 
-                  // --- STREAK BUTTON (UPDATED) ---
+                  // --- STREAK BUTTON ---
                   _buildOverlayButton(
                     context,
                     'streak',
                     const Color(0xFFF7DB9F),
                     const Color(0xFF8B0000),
                     () async {
-                      // 1. Close settings overlay
                       Navigator.of(context).pop();
 
-                      // 2. Fetch correct data
                       final int count = await StreakService.getStreakCount();
                       final Set<int> activeDays =
                           await StreakService.getActiveWeekdays();
 
                       if (context.mounted) {
-                        // 3. Show Streak Overlay with correct params
-                        showDialog(
+                        // Using Smooth Dialog helper
+                        showSmoothDialog(
                           context: context,
-                          barrierColor: Colors.black.withOpacity(0.6),
                           builder: (context) => StreakOverlay(
-                            currentStreak: count, // Pass exact count (0 if 0)
-                            activeWeekdays: activeDays, // Pass the Set<int>
+                            currentStreak: count,
+                            activeWeekdays: activeDays,
                           ),
                         );
                       }
@@ -119,6 +120,25 @@ class SettingsOverlay extends StatelessWidget {
                         SmoothPageRoute(
                           builder: (context) => const AboutPage(),
                         ),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 15),
+
+                  // --- LOG OUT BUTTON ---
+                  _buildOverlayButton(
+                    context,
+                    'log out',
+                    const Color(0xFFF7DB9F),
+                    const Color(0xFF8B0000),
+                    () {
+                      // 1. Close Settings
+                      Navigator.of(context).pop();
+
+                      // 2. Show Confirmation Overlay
+                      showDialog(
+                        context: context,
+                        builder: (context) => const LogoutOverlay(),
                       );
                     },
                   ),
@@ -160,7 +180,7 @@ class SettingsOverlay extends StatelessWidget {
   ) {
     return SizedBox(
       width: double.infinity,
-      height: 45,
+      height: 38, // Adjusted height to fit the extra button nicely
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -175,7 +195,7 @@ class SettingsOverlay extends StatelessWidget {
         child: Text(
           text,
           style: TextStyle(
-            fontSize: 20,
+            fontSize: 18,
             fontWeight: FontWeight.bold,
             color: textColor,
           ),

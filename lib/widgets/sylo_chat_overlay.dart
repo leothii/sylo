@@ -4,9 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart' as http;
 
-import '../utils/env.dart';
-// --- NEW IMPORTS FOR STREAK ---
+import '../utils/env.dart'; // <--- Back to your original Env class
 import '../utils/streak_service.dart';
+import '../utils/smooth_page.dart'; // <--- For Smooth Transition
 import '../widgets/streak_overlay.dart';
 
 // --- VISUAL CONSTANTS ---
@@ -21,17 +21,16 @@ class ChatMessage {
   ChatMessage({required this.text, required this.isUser});
 }
 
-// --- 2. Trigger Function ---
+// --- 2. Trigger Function (Using Smooth Dialog) ---
 Future<void> showSyloChatOverlay(
   BuildContext context, {
   Offset? owlOffset,
   Offset? brandTextOffset,
   double? cardVerticalFactor,
 }) {
-  return showDialog<void>(
+  // APPLIED SMOOTH TRANSITION HERE
+  return showSmoothDialog(
     context: context,
-    barrierDismissible: true,
-    barrierColor: Colors.black.withOpacity(0.75),
     builder: (_) => SyloChatOverlay(
       owlOffset: owlOffset,
       brandTextOffset: brandTextOffset,
@@ -70,21 +69,17 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
     super.dispose();
   }
 
-  // --- NEW STREAK CHECKER METHOD ---
+  // --- STREAK CHECKER (Using Smooth Dialog) ---
   Future<void> _checkStreak() async {
-    // 1. Try to update the streak
     bool streakUpdated = await StreakService.updateStreak();
 
-    // 2. If updated, show the overlay
     if (streakUpdated && mounted) {
-      // 3. Fetch fresh data
       int newCount = await StreakService.getStreakCount();
       Set<int> activeDays = await StreakService.getActiveWeekdays();
 
-      // 4. Show the Dialog
-      showDialog(
+      // APPLIED SMOOTH TRANSITION HERE TOO
+      showSmoothDialog(
         context: context,
-        barrierColor: Colors.black.withOpacity(0.6),
         builder: (_) =>
             StreakOverlay(currentStreak: newCount, activeWeekdays: activeDays),
       );
@@ -102,11 +97,12 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
     });
     _scrollToBottom();
 
-    // --- TRIGGER STREAK LOGIC HERE ---
+    // Trigger Streak Logic
     _checkStreak();
-    // --------------------------------
 
+    // --- REVERTED TO ORIGINAL ENV LOGIC ---
     final String apiKey = Env.grokKey;
+
     if (apiKey.isEmpty) {
       if (mounted) {
         setState(() {
@@ -135,7 +131,6 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
           'X-Title': 'Sylo Chat',
         },
         body: jsonEncode({
-          // Using Grok 4.1 Fast Free
           "model": "x-ai/grok-4.1-fast:free",
           "messages": [
             {
@@ -414,7 +409,6 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
                                     ),
                                   ),
                                 ),
-                                // REMOVED ATTACHMENT ICON FROM HERE
                               ],
                             ),
                           ),
