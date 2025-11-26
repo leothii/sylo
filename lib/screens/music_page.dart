@@ -5,12 +5,15 @@ import 'dart:async';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'settings_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
-import '../widgets/connecting_overlay.dart';
+import '../widgets/spotify_api.dart';
 import '../utils/audio_player_service.dart';
 import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute
+import '../services/spotify_service.dart';
+import '../utils/env.dart';
 import 'profile_page.dart';
 import 'home_page.dart';
 
@@ -42,6 +45,7 @@ class _MusicPageState extends State<MusicPage> {
 
   late final AudioPlayerService _audioService;
   AudioPlayer get _player => _audioService.player;
+  final SpotifyService _spotifyService = SpotifyService.instance;
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<Duration?>? _durationSub;
   StreamSubscription<PlayerState>? _playerStateSub;
@@ -50,6 +54,7 @@ class _MusicPageState extends State<MusicPage> {
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
   bool _isLoadingFile = false;
+  bool _isConnectingSpotify = false;
   String? _selectedFileName;
 
   bool get _hasTrack => _duration > Duration.zero;
@@ -72,6 +77,7 @@ class _MusicPageState extends State<MusicPage> {
     super.initState();
     _audioService = AudioPlayerService.instance;
     _initializeAudio();
+    _initializeSpotify();
   }
 
   Future<void> _initializeAudio() async {
@@ -107,6 +113,12 @@ class _MusicPageState extends State<MusicPage> {
       if (!mounted) return;
       setState(() {});
     });
+  }
+
+  Future<void> _initializeSpotify() async {
+    await _spotifyService.ensureInitialized();
+    if (!mounted) return;
+    setState(() {});
   }
 
   @override
@@ -341,15 +353,48 @@ class _MusicPageState extends State<MusicPage> {
                     const SizedBox(height: 12),
 
                     // "Logged as user" Button
-                    _buildActionButton(
-                      text: 'logged as user*',
-                      icon: Icons.wifi,
-                      bgColor: _colBtnGold,
-                      textColor: _colTextGrey,
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => const ConnectOverlay(),
+                    ValueListenableBuilder<SpotifySession?>(
+                      valueListenable: _spotifyService.session,
+                      builder: (BuildContext context, SpotifySession? session, _) {
+                        final bool connected = session != null;
+                        final String buttonLabel = connected ? 'open spotify player' : 'connect to spotify';
+                        final IconData buttonIcon = connected ? Icons.play_circle_fill : Icons.wifi;
+                        final VoidCallback action = connected ? _openSpotifyPlayer : _connectSpotify;
+                        final bool enabled = connected || Env.hasSpotifyCredentials;
+
+                        return Column(
+                          children: [
+                            _buildActionButton(
+                              text: buttonLabel,
+                              icon: buttonIcon,
+                              bgColor: _colBtnGold,
+                              textColor: _colTextGrey,
+                              onTap: action,
+                              isBusy: !connected && _isConnectingSpotify,
+                              enabled: enabled && (!_isConnectingSpotify || connected),
+                            ),
+                            const SizedBox(height: 8),
+                            if (connected)
+                              Text(
+                                'Connected as ${session.displayName ?? session.userId ?? 'Spotify user'}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontFamily: 'Quicksand',
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              )
+                            else if (!Env.hasSpotifyCredentials)
+                              const Text(
+                                'Spotify integration not configured.',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontFamily: 'Quicksand',
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                          ],
                         );
                       },
                     ),
@@ -533,6 +578,75 @@ class _MusicPageState extends State<MusicPage> {
         setState(() => _isLoadingFile = false);
       }
     }
+  }
+
+  Future<void> _connectSpotify() async {
+    if (_isConnectingSpotify) {
+      return;
+    }
+    setState(() => _isConnectingSpotify = true);
+
+    final bool? connected = await showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) => const SpotifyApiOverlay(),
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() => _isConnectingSpotify = false);
+
+    if (connected == true) {
+      final SpotifySession? session = _spotifyService.session.value;
+      final String name = session?.displayName ?? session?.userId ?? 'Spotify';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Connected to $name.')),
+      );
+    }
+  }
+
+  Future<void> _openSpotifyPlayer() async {
+    await _spotifyService.ensureAccessToken();
+
+    const String fallbackUrl = 'https://open.spotify.com/';
+    final Uri spotifyUri = Uri.parse('spotify://');
+    final Uri webUri = Uri.parse(fallbackUrl);
+
+    try {
+      final bool launchedNative = await launchUrl(
+        spotifyUri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (launchedNative) {
+        return;
+      }
+    } catch (_) {
+      // Native Spotify scheme failed; fall back to web.
+    }
+
+    try {
+      final bool launchedWeb = await launchUrl(
+        webUri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (launchedWeb) {
+        return;
+      }
+    } catch (_) {
+      // Web launch failed; show fallback message.
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Open Spotify to start listening.'),
+      ),
+    );
   }
 
   Future<void> _togglePlayback() async {
