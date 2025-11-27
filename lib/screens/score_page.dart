@@ -74,45 +74,51 @@ class _ScorePageState extends State<ScorePage> {
       backgroundColor: _colBackgroundBlue,
 
       // --- UPDATED BOTTOM NAVIGATION BAR ---
-      bottomNavigationBar: Container(
-        height: 80,
+      bottomNavigationBar: ColoredBox(
         color: _colBackgroundBlue,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            // 1. Profile Icon -> Navigates to ProfilePage
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  SmoothPageRoute(builder: (_) => const ProfilePage()),
-                ); // <--- Smooth
-              },
-              child: const Icon(Icons.person, color: _colNavItem, size: 32),
-            ),
+        child: SafeArea(
+          top: false,
+          minimum: const EdgeInsets.symmetric(horizontal: 12),
+          child: SizedBox(
+            height: 80,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // 1. Profile Icon -> Navigates to ProfilePage
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      SmoothPageRoute(builder: (_) => const ProfilePage()),
+                    ); // <--- Smooth
+                  },
+                  child: const Icon(Icons.person, color: _colNavItem, size: 32),
+                ),
 
-            // 2. Home Icon -> Navigates back to HomePage (Replaced Notes Icon)
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                  SmoothPageRoute(
-                    builder: (_) => const HomePage(),
-                  ), // <--- Smooth
-                  (route) => false,
-                );
-              },
-              child: const Icon(Icons.home, color: _colNavItem, size: 32),
-            ),
+                // 2. Home Icon -> Navigates back to HomePage (Replaced Notes Icon)
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      SmoothPageRoute(
+                        builder: (_) => const HomePage(),
+                      ), // <--- Smooth
+                      (route) => false,
+                    );
+                  },
+                  child: const Icon(Icons.home, color: _colNavItem, size: 32),
+                ),
 
-            // 3. Music Icon -> Navigates to MusicPage
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  SmoothPageRoute(builder: (_) => const MusicPage()),
-                ); // <--- Smooth
-              },
-              child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+                // 3. Music Icon -> Navigates to MusicPage
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      SmoothPageRoute(builder: (_) => const MusicPage()),
+                    ); // <--- Smooth
+                  },
+                  child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
 
@@ -137,29 +143,35 @@ class _ScorePageState extends State<ScorePage> {
                     // Header: "Score" Title + Close Button
                     Padding(
                       padding: const EdgeInsets.fromLTRB(24, 50, 24, 0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Spacer(),
-                          const Text(
-                            'Score',
-                            style: TextStyle(
-                              color: _colTitleRed,
-                              fontSize: 32,
-                              fontFamily: 'Bungee',
-                              fontWeight: FontWeight.w400,
+                      child: SizedBox(
+                        height: 44,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            const Center(
+                              child: Text(
+                                'Score',
+                                style: TextStyle(
+                                  color: _colTitleRed,
+                                  fontSize: 32,
+                                  fontFamily: 'Bungee',
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
                             ),
-                          ),
-                          const Spacer(),
-                          GestureDetector(
-                            onTap: () => Navigator.of(context).maybePop(),
-                            child: const Icon(
-                              Icons.close,
-                              color: _colTextGrey,
-                              size: 28,
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: GestureDetector(
+                                onTap: () => Navigator.of(context).maybePop(),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: _colTextGrey,
+                                  size: 28,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
 

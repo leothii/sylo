@@ -9,6 +9,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'settings_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
+import '../widgets/icon_badge.dart';
+import '../widgets/sound_toggle_button.dart';
 import '../widgets/spotify_api.dart';
 import '../utils/audio_player_service.dart';
 import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute
@@ -137,57 +139,63 @@ class _MusicPageState extends State<MusicPage> {
     return Scaffold(
       backgroundColor: _colBackgroundBlue,
       // Bottom Navigation Bar
-      bottomNavigationBar: Container(
-        height: 80,
-        color: _colBackgroundBlue,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            // 1. Profile Icon -> Navigates to ProfilePage
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).pushReplacement(
-                  SmoothPageRoute(
-                    builder: (_) => const ProfilePage(),
-                  ), // <--- Smooth
-                );
-              },
-              child: const Icon(Icons.person, color: _colNavItem, size: 32),
-            ),
-
-            // 2. Home Icon -> Navigates back to HomePage
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                  SmoothPageRoute(
-                    builder: (_) => const HomePage(),
-                  ), // <--- Smooth
-                  (route) => false,
-                );
-              },
-              child: const Icon(Icons.home, color: _colNavItem, size: 32),
-            ),
-
-            // 3. Headphones Icon (ACTIVE) -> Has Blue Indicator
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: _colNavActiveBg, // Blue background indicator
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
+        bottomNavigationBar: ColoredBox(
+          color: _colBackgroundBlue,
+          child: SafeArea(
+            top: false,
+            minimum: const EdgeInsets.symmetric(horizontal: 12),
+            child: SizedBox(
+              height: 80,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // 1. Profile Icon -> Navigates to ProfilePage
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pushReplacement(
+                        SmoothPageRoute(
+                          builder: (_) => const ProfilePage(),
+                        ), // <--- Smooth
+                      );
+                    },
+                    child: const Icon(Icons.person, color: _colNavItem, size: 32),
+                  ),
+  
+                  // 2. Home Icon -> Navigates back to HomePage
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        SmoothPageRoute(
+                          builder: (_) => const HomePage(),
+                        ), // <--- Smooth
+                        (route) => false,
+                      );
+                    },
+                    child: const Icon(Icons.home, color: _colNavItem, size: 32),
+                  ),
+  
+                  // 3. Headphones Icon (ACTIVE) -> Has Blue Indicator
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: _colNavActiveBg, // Blue background indicator
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
                   ),
                 ],
               ),
-              child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
             ),
-          ],
+          ),
         ),
-      ),
       body: SafeArea(
         child: Stack(
           clipBehavior: Clip.none,
@@ -425,29 +433,22 @@ class _MusicPageState extends State<MusicPage> {
             Positioned(
               top: 10,
               right: 20,
-              child: GestureDetector(
+              child: IconBadge(
+                assetPath: 'assets/icons/settings.png',
+                size: 30,
                 onTap: () {
                   showDialog(
                     context: context,
                     builder: (context) => const SettingsOverlay(),
                   );
                 },
-                child: const Icon(
-                  Icons.settings,
-                  color: Color(0xFFE1B964),
-                  size: 30,
-                ),
               ),
             ),
 
-            Positioned(
+            const Positioned(
               top: 50,
               right: 20,
-              child: const Icon(
-                Icons.volume_up,
-                color: Color(0xFFE1B964),
-                size: 30,
-              ),
+              child: SoundToggleButton(size: 30),
             ),
           ],
         ),

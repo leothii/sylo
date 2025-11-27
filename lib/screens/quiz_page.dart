@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'score_page.dart';
 import 'settings_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
+import '../widgets/icon_badge.dart';
+import '../widgets/sound_toggle_button.dart';
 import '../utils/smooth_page.dart'; // For showSmoothDialog & SmoothPageRoute
 import '../services/ai_service.dart';
 
@@ -166,40 +168,50 @@ class _QuizPageState extends State<QuizPage> {
       backgroundColor: _colBackgroundBlue,
 
       // --- BOTTOM NAV ---
-      bottomNavigationBar: Container(
-        height: 80,
-        color: _colBackgroundBlue,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            GestureDetector(
-              onTap: () {
-                Navigator.of(
-                  context,
-                ).push(SmoothPageRoute(builder: (_) => const ProfilePage()));
-              },
-              child: const Icon(Icons.person, color: _colNavItem, size: 32),
+        bottomNavigationBar: ColoredBox(
+          color: _colBackgroundBlue,
+          child: SafeArea(
+            top: false,
+            minimum: const EdgeInsets.symmetric(horizontal: 12),
+            child: SizedBox(
+              height: 80,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        SmoothPageRoute(builder: (_) => const ProfilePage()),
+                      );
+                    },
+                    child: const Icon(Icons.person, color: _colNavItem, size: 32),
+                  ),
+
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        SmoothPageRoute(
+                          builder: (_) => const HomePage(),
+                        ),
+                        (route) => false,
+                      );
+                    },
+                    child: const Icon(Icons.home, color: _colNavItem, size: 32),
+                  ),
+
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        SmoothPageRoute(builder: (_) => const MusicPage()),
+                      );
+                    },
+                    child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+                  ),
+                ],
+              ),
             ),
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                  SmoothPageRoute(builder: (_) => const HomePage()),
-                  (route) => false,
-                );
-              },
-              child: const Icon(Icons.home, color: _colNavItem, size: 32),
-            ),
-            GestureDetector(
-              onTap: () {
-                Navigator.of(
-                  context,
-                ).push(SmoothPageRoute(builder: (_) => const MusicPage()));
-              },
-              child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
-            ),
-          ],
+          ),
         ),
-      ),
 
       body: SafeArea(
         child: Stack(
@@ -224,29 +236,35 @@ class _QuizPageState extends State<QuizPage> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.fromLTRB(24, 50, 24, 10),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Spacer(),
-                              const Text(
-                                'QUIZ',
-                                style: TextStyle(
-                                  color: _colTitleRed,
-                                  fontSize: 32,
-                                  fontFamily: 'Bungee',
-                                  fontWeight: FontWeight.w400,
+                          child: SizedBox(
+                            height: 44,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                const Center(
+                                  child: Text(
+                                    'QUIZ',
+                                    style: TextStyle(
+                                      color: _colTitleRed,
+                                      fontSize: 32,
+                                      fontFamily: 'Bungee',
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                              const Spacer(),
-                              GestureDetector(
-                                onTap: () => Navigator.of(context).maybePop(),
-                                child: const Icon(
-                                  Icons.close,
-                                  color: _colTextGrey,
-                                  size: 28,
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: GestureDetector(
+                                    onTap: () => Navigator.of(context).maybePop(),
+                                    child: const Icon(
+                                      Icons.close,
+                                      color: _colTextGrey,
+                                      size: 28,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                         Expanded(child: _buildQuizBody()),
@@ -427,30 +445,23 @@ class _QuizPageState extends State<QuizPage> {
             Positioned(
               top: 10,
               right: 20,
-              child: GestureDetector(
+              child: IconBadge(
+                assetPath: 'assets/icons/settings.png',
+                size: 30,
                 onTap: () {
                   showDialog(
                     context: context,
                     builder: (context) => const SettingsOverlay(),
                   );
                 },
-                child: const Icon(
-                  Icons.settings,
-                  color: Color(0xFFE1B964),
-                  size: 30,
-                ),
               ),
             ),
 
             // --- VOLUME ICON ---
-            Positioned(
+            const Positioned(
               top: 50,
               right: 20,
-              child: const Icon(
-                Icons.volume_up,
-                color: Color(0xFFE1B964),
-                size: 30,
-              ),
+              child: SoundToggleButton(size: 30),
             ),
           ],
         ),

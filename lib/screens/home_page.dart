@@ -9,6 +9,8 @@ import '../widgets/audio_card.dart';
 import '../widgets/sylo_chat_overlay.dart';
 import '../widgets/streak_overlay.dart'; // Required for the popup
 import '../utils/smooth_page.dart';
+import '../widgets/icon_badge.dart';
+import '../widgets/sound_toggle_button.dart';
 import 'settings_overlay.dart';
 import 'summary_page.dart';
 import 'notes_page.dart';
@@ -54,16 +56,25 @@ class _HomePageState extends State<HomePage> {
     bool streakUpdated = await StreakService.updateStreak();
 
     if (streakUpdated && mounted) {
-      int newCount = await StreakService.getStreakCount();
-      Set<int> activeDays = await StreakService.getActiveWeekdays();
+      await _showStreakOverlay();
+    }
+  }
 
-      await showSmoothDialog(
-        context: context,
-        builder: (_) =>
-            StreakOverlay(currentStreak: newCount, activeWeekdays: activeDays),
-      );
+  Future<void> _showStreakOverlay() async {
+    final int newCount = await StreakService.getStreakCount();
+    final Set<int> activeDays = await StreakService.getActiveWeekdays();
 
-      // Refresh flame immediately
+    if (!mounted) {
+      return;
+    }
+
+    await showSmoothDialog(
+      context: context,
+      builder: (_) =>
+          StreakOverlay(currentStreak: newCount, activeWeekdays: activeDays),
+    );
+
+    if (mounted) {
       _loadStreakData();
     }
   }
@@ -125,7 +136,7 @@ class _HomePageState extends State<HomePage> {
       children: [
         Column(
           children: [
-            _IconBadge(
+            IconBadge(
               assetPath: 'assets/icons/profile.png',
               size: 30,
               onTap: () {
@@ -135,7 +146,7 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             const SizedBox(height: 18),
-            _IconBadge(
+            IconBadge(
               assetPath: 'assets/icons/note.png',
               size: 30,
               onTap: () {
@@ -149,44 +160,47 @@ class _HomePageState extends State<HomePage> {
         const Spacer(),
 
         // --- FLAME INDICATOR ---
-        Container(
-          margin: const EdgeInsets.only(right: 12, top: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.local_fire_department_rounded,
-                color: flameColor,
-                size: 20,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '$_streakCount',
-                style: TextStyle(
-                  fontFamily: 'Bungee',
-                  fontSize: 16,
+        GestureDetector(
+          onTap: _showStreakOverlay,
+          child: Container(
+            margin: const EdgeInsets.only(right: 12, top: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.local_fire_department_rounded,
                   color: flameColor,
+                  size: 20,
                 ),
-              ),
-            ],
+                const SizedBox(width: 4),
+                Text(
+                  '$_streakCount',
+                  style: TextStyle(
+                    fontFamily: 'Bungee',
+                    fontSize: 16,
+                    color: flameColor,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
 
         // -----------------------
         Column(
           children: [
-            _IconBadge(
+            IconBadge(
               assetPath: 'assets/icons/settings.png',
               size: 30,
               onTap: _openSettingsOverlay,
             ),
             const SizedBox(height: 18),
-            _IconBadge(assetPath: 'assets/icons/sound.png', size: 30),
+            SoundToggleButton(size: 30),
           ],
         ),
       ],
@@ -491,35 +505,3 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-class _IconBadge extends StatelessWidget {
-  const _IconBadge({required this.assetPath, this.size = 44, this.onTap});
-  final String assetPath;
-  final double size;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final image = Image.asset(
-      assetPath,
-      width: size,
-      height: size,
-      fit: BoxFit.contain,
-    );
-    if (onTap == null) {
-      return SizedBox(
-        height: size,
-        width: size,
-        child: Center(child: image),
-      );
-    }
-    return SizedBox(
-      height: size,
-      width: size,
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.translucent,
-        child: Center(child: image),
-      ),
-    );
-  }
-}

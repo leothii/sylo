@@ -3,7 +3,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'home_page.dart';
-import 'settings_overlay.dart';
 import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -40,40 +39,11 @@ class _LoginPageState extends State<LoginPage> {
       body: SafeArea(
         child: Stack(
           children: [
-            // --- TOP ICONS (Unchanged) ---
-            Positioned(
-              right: 18,
-              top: 28,
-              child: IconButton(
-                icon: Image.asset(
-                  'assets/icons/settings.png',
-                  height: 36,
-                  width: 36,
-                ),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return const SettingsOverlay();
-                    },
-                  );
-                },
-              ),
-            ),
-            Positioned(
-              right: 18,
-              top: 92,
-              child: Image.asset(
-                'assets/icons/sound.png',
-                height: 36,
-                width: 36,
-              ),
-            ),
             // --- LOGO / OWL (Unchanged) ---
             Positioned(
               left: 0,
               right: 0,
-              top: 215,
+              top: 175,
               child: Center(
                 child: Text.rich(
                   TextSpan(
@@ -121,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             Positioned(
               left: 100,
-              top: 259,
+              top: 219,
               child: Text(
                 '"',
                 style: TextStyle(
@@ -134,7 +104,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             Positioned(
               left: 92,
-              top: 229,
+              top: 189,
               child: SizedBox(
                 width: 273,
                 height: 273,
@@ -146,7 +116,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             Positioned(
               left: 92,
-              top: 323.62,
+              top: 283.62,
               child: Text(
                 'Please \nenter\nyour:',
                 style: TextStyle(
@@ -163,7 +133,7 @@ class _LoginPageState extends State<LoginPage> {
             // --- NAME FIELD (Unchanged) ---
             Positioned(
               left: 108,
-              top: 443,
+              top: 403,
               child: Container(
                 width: 163,
                 height: 33,
@@ -203,7 +173,7 @@ class _LoginPageState extends State<LoginPage> {
             // --- PASSWORD FIELD (Unchanged) ---
             Positioned(
               left: 108,
-              top: 502,
+              top: 462,
               child: Container(
                 width: 163,
                 height: 33,
@@ -243,7 +213,7 @@ class _LoginPageState extends State<LoginPage> {
             // --- *** MODIFIED: FORGOT PASSWORD TEXT *** ---
             Positioned(
               left: 108,
-              top: 535,
+              top: 495,
               width: 163,
               child: Container(
                 alignment: Alignment.centerRight,
@@ -272,7 +242,7 @@ class _LoginPageState extends State<LoginPage> {
             // --- CONTINUE BUTTON (Unchanged) ---
             Positioned(
               left: 126,
-              top: 584,
+              top: 544,
               child: Container(
                 width: 116.85,
                 height: 38,
@@ -324,7 +294,7 @@ class _LoginPageState extends State<LoginPage> {
 
             // --- "OR" TEXT (Unchanged) ---
             Positioned(
-              top: 630,
+              top: 590,
               left: 126,
               width: 116.85,
               child: const Center(
@@ -343,7 +313,7 @@ class _LoginPageState extends State<LoginPage> {
             // --- "SIGN UP" BUTTON (Unchanged) ---
             Positioned(
               left: 126,
-              top: 658,
+              top: 618,
               child: Container(
                 width: 116.85,
                 height: 38,

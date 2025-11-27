@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'settings_overlay.dart';
 import '../services/notes_service.dart';
 import '../widgets/sylo_chat_overlay.dart';
+import '../widgets/icon_badge.dart';
+import '../widgets/sound_toggle_button.dart';
 import 'profile_page.dart';
 import 'music_page.dart';
 import 'home_page.dart';
@@ -34,6 +36,7 @@ class _NotesPageState extends State<NotesPage> {
 
   // Unused now, but kept for reference if you need it later
   final NotesService _notesService = NotesService.instance;
+  String? _expandedNoteId;
 
   @override
   void initState() {
@@ -46,47 +49,51 @@ class _NotesPageState extends State<NotesPage> {
     return Scaffold(
       backgroundColor: _colBackgroundBlue,
       // Bottom Navigation Bar
-      bottomNavigationBar: Container(
-        height: 80,
+      bottomNavigationBar: ColoredBox(
         color: _colBackgroundBlue,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            // 1. Profile Icon -> Navigates to ProfilePage
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  SmoothPageRoute(builder: (_) => const ProfilePage()),
-                ); // <--- Smooth
-              },
-              child: const Icon(Icons.person, color: _colNavItem, size: 32),
-            ),
+        child: SafeArea(
+          top: false,
+          minimum: const EdgeInsets.symmetric(horizontal: 12),
+          child: SizedBox(
+            height: 80,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                // 1. Profile Icon -> Navigates to ProfilePage
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      SmoothPageRoute(builder: (_) => const ProfilePage()),
+                    ); // <--- Smooth
+                  },
+                  child: const Icon(Icons.person, color: _colNavItem, size: 32),
+                ),
 
-            // 2. Home Icon -> Navigates back to HomePage
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).pushAndRemoveUntil(
-                  SmoothPageRoute(
-                    builder: (_) => const HomePage(),
-                  ), // <--- Smooth
-                  (route) => false,
-                );
-              },
-              // UPDATED: Removed the Container with background color.
-              // Now it's just the icon, matching the others.
-              child: const Icon(Icons.home, color: _colNavItem, size: 32),
-            ),
+                // 2. Home Icon -> Navigates back to HomePage
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      SmoothPageRoute(
+                        builder: (_) => const HomePage(),
+                      ), // <--- Smooth
+                      (route) => false,
+                    );
+                  },
+                  child: const Icon(Icons.home, color: _colNavItem, size: 32),
+                ),
 
-            // 3. Music Icon -> Navigates to MusicPage
-            GestureDetector(
-              onTap: () {
-                Navigator.of(context).push(
-                  SmoothPageRoute(builder: (_) => const MusicPage()),
-                ); // <--- Smooth
-              },
-              child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+                // 3. Music Icon -> Navigates to MusicPage
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      SmoothPageRoute(builder: (_) => const MusicPage()),
+                    ); // <--- Smooth
+                  },
+                  child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
       body: SafeArea(
@@ -110,36 +117,42 @@ class _NotesPageState extends State<NotesPage> {
                     // Header: "MY NOTES" Title + Close Button
                     Padding(
                       padding: const EdgeInsets.fromLTRB(24, 50, 24, 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Spacer(),
-                          const Text(
-                            'MY NOTES',
-                            style: TextStyle(
-                              color: _colTitleRed,
-                              fontSize: 32,
-                              fontFamily: 'Bungee',
-                              fontWeight: FontWeight.w400,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black12,
-                                  offset: Offset(2, 2),
-                                  blurRadius: 4,
+                      child: SizedBox(
+                        height: 44,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            const Center(
+                              child: Text(
+                                'MY NOTES',
+                                style: TextStyle(
+                                  color: _colTitleRed,
+                                  fontSize: 32,
+                                  fontFamily: 'Bungee',
+                                  fontWeight: FontWeight.w400,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black12,
+                                      offset: Offset(2, 2),
+                                      blurRadius: 4,
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                          const Spacer(),
-                          GestureDetector(
-                            onTap: () => Navigator.of(context).maybePop(),
-                            child: const Icon(
-                              Icons.close,
-                              color: _colIconGrey,
-                              size: 28,
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: GestureDetector(
+                                onTap: () => Navigator.of(context).maybePop(),
+                                child: const Icon(
+                                  Icons.close,
+                                  color: _colIconGrey,
+                                  size: 28,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
 
@@ -171,7 +184,12 @@ class _NotesPageState extends State<NotesPage> {
                             itemCount: notes.length,
                             separatorBuilder: (_, __) => const SizedBox(height: 16),
                             itemBuilder: (BuildContext context, int index) {
-                              return _buildNoteItem(notes[index]);
+                              final SavedNote note = notes[index];
+                              return _buildNoteItem(
+                                note,
+                                isExpanded: note.id == _expandedNoteId,
+                                onTap: () => _handleNoteTap(note.id),
+                              );
                             },
                           );
                         },
@@ -204,25 +222,22 @@ class _NotesPageState extends State<NotesPage> {
             Positioned(
               top: 10,
               right: 20,
-              child: GestureDetector(
+              child: IconBadge(
+                assetPath: 'assets/icons/settings.png',
+                size: 30,
                 onTap: () {
                   showDialog(
                     context: context,
                     builder: (context) => const SettingsOverlay(),
                   );
                 },
-                child: const Icon(
-                  Icons.settings,
-                  color: _colItemGold,
-                  size: 30,
-                ),
               ),
             ),
 
-            Positioned(
+            const Positioned(
               top: 50,
               right: 20,
-              child: const Icon(Icons.volume_up, color: _colItemGold, size: 30),
+              child: SoundToggleButton(size: 30),
             ),
           ],
         ),
@@ -231,70 +246,100 @@ class _NotesPageState extends State<NotesPage> {
   }
 
   // Helper widget to build individual note cards
-  Widget _buildNoteItem(SavedNote note) {
-    return Container(
-      decoration: BoxDecoration(
-        color: _colItemGold,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Title and Trash Icon
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  note.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: _colTextWhite,
-                    fontSize: 14,
-                    fontFamily: 'Quicksand',
-                    fontWeight: FontWeight.w700,
+  void _handleNoteTap(String noteId) {
+    setState(() {
+      _expandedNoteId = _expandedNoteId == noteId ? null : noteId;
+    });
+  }
+
+  Widget _buildNoteItem(
+    SavedNote note, {
+    required bool isExpanded,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          color: _colItemGold,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title and Trash Icon
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    note.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: _colTextWhite,
+                      fontSize: 14,
+                      fontFamily: 'Quicksand',
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
-              IconButton(
-                onPressed: () => _deleteNote(note),
-                icon: const Icon(Icons.delete_outline, color: _colIconGrey, size: 20),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                splashRadius: 18,
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Saved on ${_formatTimestamp(note.createdAt)}',
-            style: const TextStyle(
-              color: _colTextWhite,
-              fontSize: 10,
-              fontFamily: 'Quicksand',
-              fontWeight: FontWeight.w500,
+                IconButton(
+                  onPressed: () => _deleteNote(note),
+                  icon: const Icon(Icons.delete_outline, color: _colIconGrey, size: 20),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  splashRadius: 18,
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 4),
-          // Divider Line
-          const Divider(color: _colIconGrey, thickness: 1, height: 8),
-          const SizedBox(height: 4),
-          // Description
-          Text(
-            note.body,
-            style: const TextStyle(
-              color: _colTextGrey,
-              fontSize: 10,
-              fontFamily: 'Quicksand',
-              fontWeight: FontWeight.w600,
-              height: 1.2,
+            const SizedBox(height: 4),
+            Text(
+              'Saved on ${_formatTimestamp(note.createdAt)}',
+              style: const TextStyle(
+                color: _colTextWhite,
+                fontSize: 10,
+                fontFamily: 'Quicksand',
+                fontWeight: FontWeight.w500,
+              ),
             ),
-            maxLines: 6,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            const SizedBox(height: 4),
+            const Divider(color: _colIconGrey, thickness: 1, height: 8),
+            const SizedBox(height: 4),
+            AnimatedCrossFade(
+              duration: const Duration(milliseconds: 200),
+              firstCurve: Curves.easeInOut,
+              secondCurve: Curves.easeInOut,
+              crossFadeState:
+                  isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              firstChild: Text(
+                note.body,
+                style: const TextStyle(
+                  color: _colTextGrey,
+                  fontSize: 10,
+                  fontFamily: 'Quicksand',
+                  fontWeight: FontWeight.w600,
+                  height: 1.2,
+                ),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              secondChild: Text(
+                note.body,
+                style: const TextStyle(
+                  color: _colTextGrey,
+                  fontSize: 12,
+                  fontFamily: 'Quicksand',
+                  fontWeight: FontWeight.w600,
+                  height: 1.4,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

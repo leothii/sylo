@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // <--- Import for Auth
+
+import '../screens/about_page.dart';
 import '../utils/app_colors.dart';
 import '../utils/smooth_page.dart';
-import '../utils/streak_service.dart';
-import '../widgets/streak_overlay.dart';
 import '../widgets/exit_overlay.dart';
-import '../screens/about_page.dart';
-import '../screens/notes_page.dart';
-import '../screens/login_page.dart'; // <--- Import your Login Page
-import '../widgets/logout_overlay.dart';
 
 class SettingsOverlay extends StatelessWidget {
   const SettingsOverlay({super.key});
@@ -23,9 +18,8 @@ class SettingsOverlay extends StatelessWidget {
         alignment: Alignment.topCenter,
         children: [
           Container(
-            width: 217,
-            // Increased height slightly to accommodate the new button
-            height: 380,
+            width: 200,
+            height: 220,
             margin: const EdgeInsets.only(top: 60),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
@@ -39,82 +33,29 @@ class SettingsOverlay extends StatelessWidget {
               ],
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-                vertical: 25.0,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Align(
                     alignment: Alignment.topRight,
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      icon: const Icon(
-                        Icons.close,
-                        color: Colors.white,
-                        size: 28,
+                    child: Transform.translate(
+                      offset: const Offset(8, 0),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                        onPressed: () => Navigator.of(context).pop(),
                       ),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
                     ),
                   ),
-                  const SizedBox(height: 5),
-
-                  // --- NOTES BUTTON ---
+                  const SizedBox(height: 10),
                   _buildOverlayButton(
-                    context,
-                    'notes',
-                    const Color(0xFFF7DB9F),
-                    const Color(0xFF8B0000),
-                    () {
-                      Navigator.of(context).pop();
-                      Navigator.of(context).push(
-                        SmoothPageRoute(
-                          builder: (context) => const NotesPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 15),
-
-                  // --- STREAK BUTTON ---
-                  _buildOverlayButton(
-                    context,
-                    'streak',
-                    const Color(0xFFF7DB9F),
-                    const Color(0xFF8B0000),
-                    () async {
-                      Navigator.of(context).pop();
-
-                      final int count = await StreakService.getStreakCount();
-                      final Set<int> activeDays =
-                          await StreakService.getActiveWeekdays();
-
-                      if (context.mounted) {
-                        // Using Smooth Dialog helper
-                        showSmoothDialog(
-                          context: context,
-                          builder: (context) => StreakOverlay(
-                            currentStreak: count,
-                            activeWeekdays: activeDays,
-                          ),
-                        );
-                      }
-                    },
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  // --- ABOUT BUTTON ---
-                  _buildOverlayButton(
-                    context,
-                    'about',
-                    const Color(0xFFF7DB9F),
-                    const Color(0xFF8B0000),
-                    () {
+                    label: 'about',
+                    backgroundColor: const Color(0xFFF7DB9F),
+                    textColor: const Color(0xFF8B0000),
+                    onPressed: () {
                       Navigator.of(context).pop();
                       Navigator.of(context).push(
                         SmoothPageRoute(
@@ -123,34 +64,12 @@ class SettingsOverlay extends StatelessWidget {
                       );
                     },
                   ),
-                  const SizedBox(height: 15),
-
-                  // --- LOG OUT BUTTON ---
+                  const SizedBox(height: 14),
                   _buildOverlayButton(
-                    context,
-                    'log out',
-                    const Color(0xFFF7DB9F),
-                    const Color(0xFF8B0000),
-                    () {
-                      // 1. Close Settings
-                      Navigator.of(context).pop();
-
-                      // 2. Show Confirmation Overlay
-                      showDialog(
-                        context: context,
-                        builder: (context) => const LogoutOverlay(),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 15),
-
-                  // --- EXIT BUTTON ---
-                  _buildOverlayButton(
-                    context,
-                    'exit',
-                    const Color(0xFF882225),
-                    Colors.white,
-                    () {
+                    label: 'exit',
+                    backgroundColor: const Color(0xFF882225),
+                    textColor: Colors.white,
+                    onPressed: () {
                       Navigator.of(context).pop();
                       showDialog(
                         context: context,
@@ -171,33 +90,34 @@ class SettingsOverlay extends StatelessWidget {
     );
   }
 
-  Widget _buildOverlayButton(
-    BuildContext context,
-    String text,
-    Color backgroundColor,
-    Color textColor,
-    VoidCallback onPressed,
-  ) {
-    return SizedBox(
-      width: double.infinity,
-      height: 38, // Adjusted height to fit the extra button nicely
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+  Widget _buildOverlayButton({
+    required String label,
+    required Color backgroundColor,
+    required Color textColor,
+    required VoidCallback onPressed,
+  }) {
+    return Center(
+      child: SizedBox(
+        width: 148,
+        height: 44,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: backgroundColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 4,
+            shadowColor: Colors.black.withOpacity(0.25),
+            padding: EdgeInsets.zero,
           ),
-          elevation: 4,
-          shadowColor: Colors.black.withOpacity(0.25),
-          padding: EdgeInsets.zero,
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: textColor,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
           ),
         ),
       ),

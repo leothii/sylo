@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import 'home_page.dart';
 import 'login_page.dart';
-import 'settings_overlay.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -46,148 +45,233 @@ class _SignUpPageState extends State<SignUpPage> {
       body: SafeArea(
         child: Stack(
           children: [
+            // --- LOGO / OWL ---
             Positioned(
-              right: 18,
-              top: 28,
-              child: IconButton(
-                icon: Image.asset('assets/icons/settings.png', height: 36, width: 36),
-                onPressed: () {
-                  showDialog(
-                    context: context,
-                    builder: (_) => const SettingsOverlay(),
-                  );
-                },
-              ),
-            ),
-            Positioned(
-              right: 18,
-              top: 92,
-              child: Image.asset('assets/icons/sound.png', height: 36, width: 36),
-            ),
-            Positioned(
-              top: 170,
               left: 0,
               right: 0,
-              child: Column(
-                children: [
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: 'SY',
-                          style: TextStyle(
-                            color: const Color(0xFF882124),
-                            fontSize: 48,
-                            fontFamily: 'Bungee',
-                            fontWeight: FontWeight.w400,
-                            shadows: [
-                              Shadow(
-                                offset: const Offset(0, 4),
-                                blurRadius: 6,
-                                color: const Color(0xFF000000).withValues(alpha: 0.25),
-                              ),
-                            ],
-                          ),
-                        ),
-                        TextSpan(
-                          text: 'LO',
-                          style: TextStyle(
-                            color: const Color(0xFFF1F1F1),
-                            fontSize: 48,
-                            fontFamily: 'Bungee',
-                            fontWeight: FontWeight.w400,
-                            shadows: [
-                              Shadow(
-                                offset: const Offset(0, 4),
-                                blurRadius: 6,
-                                color: const Color(0xFF000000).withValues(alpha: 0.25),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Please enter your:',
-                    style: const TextStyle(
-                      color: Color(0xFFF7DB9F),
-                      fontSize: 22,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              top: 200,
-              left: 0,
-              right: 0,
+              top: 115,
               child: Center(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: 'sy',
+                        style: TextStyle(
+                          color: const Color(0xFF882124),
+                          fontSize: 42,
+                          fontFamily: 'Bungee',
+                          fontWeight: FontWeight.w400,
+                          shadows: [
+                            Shadow(
+                              offset: const Offset(0, 4),
+                              blurRadius: 4,
+                              color: const Color(0xFF000000).withValues(alpha: 0.25),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TextSpan(
+                        text: 'lo',
+                        style: TextStyle(
+                          color: const Color(0xFFF1F1F1),
+                          fontSize: 42,
+                          fontFamily: 'Bungee',
+                          fontWeight: FontWeight.w400,
+                          shadows: [
+                            Shadow(
+                              offset: const Offset(0, 4),
+                              blurRadius: 4,
+                              color: const Color(0xFF000000).withValues(alpha: 0.25),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            Positioned(
+              left: 100,
+              top: 159,
+              child: Text(
+                '"',
+                style: TextStyle(
+                  color: const Color(0xFFF7DB9F),
+                  fontSize: 96,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+
+            Positioned(
+              left: 92,
+              top: 129,
+              child: SizedBox(
+                width: 273,
+                height: 273,
                 child: Image.asset(
                   'assets/images/sylo.png',
-                  height: 260,
                   fit: BoxFit.contain,
                 ),
               ),
             ),
+
             Positioned(
-              left: 0,
-              right: 0,
-              top: 430,
-              child: Column(
-                children: [
-                  _buildInputField(controller: _nameController, hint: 'name'),
-                  const SizedBox(height: 16),
-                  _buildInputField(controller: _emailController, hint: 'email'),
-                  const SizedBox(height: 16),
-                  _buildInputField(
-                    controller: _passwordController,
-                    hint: 'password',
-                    obscureText: true,
+              left: 92,
+              top: 223.62,
+              child: Text(
+                'Create\nyour\naccount:',
+                style: const TextStyle(
+                  color: Color(0xFFF7DB9F),
+                  fontSize: 20,
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                ),
+                textAlign: TextAlign.left,
+              ),
+            ),
+
+            _buildPositionedField(
+              top: 343,
+              controller: _nameController,
+              hintText: 'name',
+            ),
+            _buildPositionedField(
+              top: 402,
+              controller: _emailController,
+              hintText: 'email',
+              keyboardType: TextInputType.emailAddress,
+            ),
+            _buildPositionedField(
+              top: 461,
+              controller: _passwordController,
+              hintText: 'password',
+              obscureText: true,
+            ),
+            _buildPositionedField(
+              top: 520,
+              controller: _confirmPasswordController,
+              hintText: 'confirm password',
+              obscureText: true,
+            ),
+
+            Positioned(
+              left: 126,
+              top: 579,
+              child: Container(
+                width: 116.85,
+                height: 38,
+                decoration: ShapeDecoration(
+                  color: const Color(0xFFF6DA9F),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  const SizedBox(height: 16),
-                  _buildInputField(
-                    controller: _confirmPasswordController,
-                    hint: 'confirm password',
-                    obscureText: true,
-                  ),
-                  const SizedBox(height: 28),
-                  _buildPrimaryButton(
-                    label: 'sign up',
-                    onTap: _handleSignUp,
-                    isLoading: _isSubmitting,
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'or',
-                    style: TextStyle(
-                      color: Color(0xFFF1F1F1),
-                      fontSize: 16,
-                      fontFamily: 'Quicksand',
-                      fontWeight: FontWeight.w600,
+                  shadows: const [
+                    BoxShadow(
+                      color: Color(0x3F000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 4),
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _isSubmitting ? null : _handleSignUp,
+                    borderRadius: BorderRadius.circular(10),
+                    child: Center(
+                      child: _isSubmitting
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(0xFF882124),
+                                ),
+                              ),
+                            )
+                          : const Text(
+                              'sign up',
+                              style: TextStyle(
+                                color: Color(0xFF882124),
+                                fontSize: 22,
+                                fontFamily: 'Quicksand',
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const LoginPage()),
-                      );
-                    },
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFFF1F1F1),
-                      textStyle: const TextStyle(
-                        fontFamily: 'Quicksand',
-                        fontSize: 16,
-                        decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+
+            Positioned(
+              top: 625,
+              left: 126,
+              width: 116.85,
+              child: const Center(
+                child: Text(
+                  'OR',
+                  style: TextStyle(
+                    color: Color(0xFFF1F1F1),
+                    fontSize: 16,
+                    fontFamily: 'Quicksand',
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+
+            Positioned(
+              left: 126,
+              top: 653,
+              child: Container(
+                width: 116.85,
+                height: 38,
+                decoration: ShapeDecoration(
+                  color: const Color(0xFF31A446),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  shadows: const [
+                    BoxShadow(
+                      color: Color(0x3F000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 4),
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _isSubmitting
+                        ? null
+                        : () {
+                            Navigator.of(context).pushReplacement(
+                              MaterialPageRoute(builder: (_) => const LoginPage()),
+                            );
+                          },
+                    borderRadius: BorderRadius.circular(10),
+                    child: const Center(
+                      child: Text(
+                        'log in',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontFamily: 'Quicksand',
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                    child: const Text('back to login'),
                   ),
-                ],
+                ),
               ),
             ),
           ],
@@ -196,32 +280,31 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  Widget _buildInputField({
+  Widget _buildPositionedField({
+    required double top,
     required TextEditingController controller,
-    required String hint,
+    required String hintText,
     bool obscureText = false,
+    TextInputType keyboardType = TextInputType.text,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 48),
+    return Positioned(
+      left: 108,
+      top: top,
       child: Container(
-        height: 46,
-        decoration: BoxDecoration(
+        width: 163,
+        height: 33,
+        decoration: ShapeDecoration(
           color: const Color(0xFFF1F1F1),
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x26000000),
-              blurRadius: 10,
-              offset: Offset(0, 6),
-            ),
-          ],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5),
+          ),
         ),
-        alignment: Alignment.centerLeft,
         child: TextField(
           controller: controller,
           obscureText: obscureText,
+          keyboardType: keyboardType,
           decoration: InputDecoration(
-            hintText: hint,
+            hintText: hintText,
             hintStyle: const TextStyle(
               color: Color(0xFFB1B1B1),
               fontSize: 16,
@@ -229,7 +312,10 @@ class _SignUpPageState extends State<SignUpPage> {
               fontWeight: FontWeight.w600,
             ),
             border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 8,
+            ),
           ),
           style: const TextStyle(
             color: Colors.black,
@@ -309,44 +395,5 @@ class _SignUpPageState extends State<SignUpPage> {
     }
   }
 
-  Widget _buildPrimaryButton({
-    required String label,
-    required VoidCallback onTap,
-    bool isLoading = false,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 76),
-      child: SizedBox(
-        height: 48,
-        child: ElevatedButton(
-          onPressed: isLoading ? null : onTap,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFFF6DA9F),
-            shadowColor: const Color(0x3F000000),
-            elevation: 6,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          ),
-          child: isLoading
-              ? const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF882124)),
-                  ),
-                )
-              : Text(
-                  label,
-                  style: const TextStyle(
-                    color: Color(0xFF882124),
-                    fontSize: 22,
-                    fontFamily: 'Quicksand',
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
 }
 
