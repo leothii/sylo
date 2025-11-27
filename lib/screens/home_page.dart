@@ -4,25 +4,22 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // For auth state listener
 
-import '../utils/app_colors.dart';
-import '../utils/streak_service.dart';
 import '../models/attachment_payload.dart';
 import '../models/study_material.dart';
 import '../services/gemini_file_service.dart';
-import '../utils/streak_service.dart'; // Streak Service
-import '../utils/smooth_page.dart'; // Smooth Page Route
+import '../utils/app_colors.dart';
+import '../utils/smooth_page.dart';
+import '../utils/streak_service.dart';
 import '../widgets/audio_card.dart';
+import '../widgets/streak_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
-import '../widgets/streak_overlay.dart'; // Streak Overlay
-
+import 'music_page.dart';
+import 'notes_page.dart';
+import 'profile_page.dart';
+import 'quiz_page.dart';
 import 'settings_overlay.dart';
 import 'summary_page.dart';
-import 'notes_page.dart';
-import 'quiz_page.dart';
-import 'profile_page.dart';
-import 'music_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -39,54 +36,36 @@ class _HomePageState extends State<HomePage> {
   String? _attachmentError;
   int _attachmentUploadToken = 0;
 
-  // Streak State
   int _streakCount = 0;
   bool _hasChattedToday = false;
 
   @override
   void initState() {
     super.initState();
-
-    // Listen for Auth changes to load correct user data
-    FirebaseAuth.instance.authStateChanges().listen((user) {
-      if (user != null && mounted) {
-        _loadStreakData();
-      }
-    });
-
-    _loadStreakData(); // Initial load
+    _loadStreakData();
   }
 
   Future<void> _loadStreakData() async {
-    final count = await StreakService.getStreakCount();
-    final hasChatted = await StreakService.hasChattedToday();
+    final int count = await StreakService.getStreakCount();
+    final bool hasChatted = await StreakService.hasChattedToday();
 
-    if (mounted) {
-      setState(() {
-        _streakCount = count;
-        _hasChattedToday = hasChatted;
-      });
+    if (!mounted) {
+      return;
     }
+
+    setState(() {
+      _streakCount = count;
+      _hasChattedToday = hasChatted;
+    });
   }
 
-  // Helper to trigger streak update (e.g. when clicking Analyze)
   Future<void> _triggerStreakUpdate() async {
-    bool streakUpdated = await StreakService.updateStreak();
-
-    if (streakUpdated && mounted) {
-      int newCount = await StreakService.getStreakCount();
-      Set<int> activeDays = await StreakService.getActiveWeekdays();
-
-      // Show the overlay smoothly
-      await showSmoothDialog(
-        context: context,
-        builder: (_) =>
-            StreakOverlay(currentStreak: newCount, activeWeekdays: activeDays),
-      );
-
-      // Refresh UI immediately
-      _loadStreakData();
+    final bool streakUpdated = await StreakService.updateStreak();
+    if (!streakUpdated || !mounted) {
+      return;
     }
+
+    await _showStreakOverlay();
   }
 
   @override
@@ -152,9 +131,9 @@ class _HomePageState extends State<HomePage> {
               assetPath: 'assets/icons/profile.png',
               size: 30,
               onTap: () {
-                Navigator.of(
-                  context,
-                ).push(SmoothPageRoute(builder: (_) => const ProfilePage()));
+                Navigator.of(context).push(
+                  SmoothPageRoute(builder: (_) => const ProfilePage()),
+                );
               },
             ),
             const SizedBox(height: 18),
@@ -162,16 +141,14 @@ class _HomePageState extends State<HomePage> {
               assetPath: 'assets/icons/note.png',
               size: 30,
               onTap: () {
-                Navigator.of(
-                  context,
-                ).push(SmoothPageRoute(builder: (_) => const NotesPage()));
+                Navigator.of(context).push(
+                  SmoothPageRoute(builder: (_) => const NotesPage()),
+                );
               },
             ),
           ],
         ),
         const Spacer(),
-
-        // --- FLAME INDICATOR ---
         GestureDetector(
           onTap: _showStreakOverlay,
           child: Container(
@@ -186,35 +163,22 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Icon(
                   Icons.local_fire_department_rounded,
-        Container(
-          margin: const EdgeInsets.only(right: 12, top: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.local_fire_department_rounded,
-                color: flameColor,
-                size: 20,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                '$_streakCount',
-                style: TextStyle(
-                  fontFamily: 'Bungee',
-                  fontSize: 16,
                   color: flameColor,
+                  size: 20,
                 ),
-              ),
-            ],
+                const SizedBox(width: 4),
+                Text(
+                  '$_streakCount',
+                  style: TextStyle(
+                    fontFamily: 'Bungee',
+                    fontSize: 16,
+                    color: flameColor,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-
-        // -----------------------
         Column(
           children: [
             _IconBadge(
@@ -223,11 +187,35 @@ class _HomePageState extends State<HomePage> {
               onTap: _openSettingsOverlay,
             ),
             const SizedBox(height: 18),
-            _IconBadge(assetPath: 'assets/icons/sound.png', size: 30),
+            const _IconBadge(
+              assetPath: 'assets/icons/sound.png',
+              size: 30,
+            ),
           ],
         ),
       ],
     );
+  }
+
+  Future<void> _showStreakOverlay() async {
+    final int newCount = await StreakService.getStreakCount();
+    final Set<int> activeDays = await StreakService.getActiveWeekdays();
+
+    if (!mounted) {
+      return;
+    }
+
+    await showSmoothDialog(
+      context: context,
+      builder: (_) => StreakOverlay(
+        currentStreak: newCount,
+        activeWeekdays: activeDays,
+      ),
+    );
+
+    if (mounted) {
+      _loadStreakData();
+    }
   }
 
   Widget _buildWelcomeCard(BuildContext context) {
