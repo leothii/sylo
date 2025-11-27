@@ -30,7 +30,7 @@ Future<T?> showSmoothDialog<T>({
     context: context,
     barrierDismissible: true, // Allows clicking outside to close
     barrierLabel: '',
-    barrierColor: Colors.black.withOpacity(0.6), // Darken background
+    barrierColor: Colors.black.withValues(alpha: 0.6), // Darken background
     // Match the duration from your SmoothPageRoute
     transitionDuration: const Duration(milliseconds: 400),
 

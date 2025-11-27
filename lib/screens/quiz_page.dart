@@ -4,8 +4,12 @@ import 'settings_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
 import '../widgets/icon_badge.dart';
 import '../widgets/sound_toggle_button.dart';
+import '../widgets/attachment_upload_status.dart';
 import '../utils/smooth_page.dart'; // For showSmoothDialog & SmoothPageRoute
+import '../models/attachment_payload.dart';
+import '../models/study_material.dart';
 import '../services/ai_service.dart';
+import '../services/gemini_file_service.dart';
 
 // --- NEW IMPORTS FOR STREAK ---
 import '../utils/streak_service.dart';
@@ -16,9 +20,14 @@ import 'profile_page.dart';
 import 'home_page.dart';
 
 class QuizPage extends StatefulWidget {
-  const QuizPage({super.key, required this.sourceText});
+  const QuizPage({
+    super.key,
+    required this.material,
+    this.initialPreparedMaterial,
+  });
 
-  final String sourceText;
+  final StudyMaterial material;
+  final PreparedStudyMaterial? initialPreparedMaterial;
 
   @override
   State<QuizPage> createState() => _QuizPageState();
@@ -41,6 +50,8 @@ class _QuizPageState extends State<QuizPage> {
   static const Color _colNavItem = Color(0xFFE1B964);
 
   final AIService _aiService = AIService();
+  PreparedStudyMaterial? _preparedMaterial;
+  bool _isPreparingMaterial = false;
   List<QuizQuestion> _questions = <QuizQuestion>[];
   String? _errorMessage;
   bool _isLoading = true;
@@ -51,30 +62,50 @@ class _QuizPageState extends State<QuizPage> {
   @override
   void initState() {
     super.initState();
+    _preparedMaterial = widget.initialPreparedMaterial;
     _loadQuiz();
   }
 
   // --- STREAK HELPER ---
   Future<void> _triggerStreakUpdate() async {
     // 1. Update Streak
-    bool streakUpdated = await StreakService.updateStreak();
+    final bool streakUpdated = await StreakService.updateStreak();
 
     // 2. If new day, show overlay
-    if (streakUpdated && mounted) {
-      int newCount = await StreakService.getStreakCount();
-      Set<int> activeDays = await StreakService.getActiveWeekdays();
-
-      await showSmoothDialog(
-        context: context,
-        builder: (_) =>
-            StreakOverlay(currentStreak: newCount, activeWeekdays: activeDays),
-      );
+    if (!streakUpdated) {
+      return;
     }
+
+    if (!mounted) {
+      return;
+    }
+
+    final int newCount = await StreakService.getStreakCount();
+
+    if (!mounted) {
+      return;
+    }
+
+    final Set<int> activeDays = await StreakService.getActiveWeekdays();
+
+    if (!mounted) {
+      return;
+    }
+
+    await showSmoothDialog(
+      context: context,
+      builder: (_) =>
+          StreakOverlay(currentStreak: newCount, activeWeekdays: activeDays),
+    );
   }
 
   Widget _buildQuizBody() {
+    if (_isPreparingMaterial) {
+      return _buildProgressBody('Uploading attachment...');
+    }
+
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return _buildProgressBody('Generating quiz questions...');
     }
 
     if (_errorMessage != null) {
@@ -133,6 +164,79 @@ class _QuizPageState extends State<QuizPage> {
     );
   }
 
+  Widget _buildProgressBody(String message) {
+    final bool showAttachmentProgress =
+        _isPreparingMaterial && widget.material.hasAttachments;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (showAttachmentProgress) ...[
+            AttachmentUploadStatus(
+              attachments: widget.material.attachments,
+              showProgress: true,
+            ),
+            const SizedBox(height: 24),
+          ],
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: _colTextGrey,
+              fontSize: 14,
+              fontFamily: 'Quicksand',
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<PreparedStudyMaterial> _ensurePreparedMaterial() async {
+    if (_preparedMaterial != null) {
+      return _preparedMaterial!;
+    }
+
+    if (!widget.material.hasAttachments) {
+      final PreparedStudyMaterial prepared = PreparedStudyMaterial(
+        text: widget.material.text,
+        attachments: const <GeminiFileAttachment>[],
+      );
+      _preparedMaterial = prepared;
+      return prepared;
+    }
+
+    setState(() {
+      _isPreparingMaterial = true;
+    });
+
+    try {
+      final List<GeminiFileAttachment> uploadedAttachments =
+          await GeminiFileService.instance
+              .uploadAll(widget.material.attachments);
+
+      final PreparedStudyMaterial prepared = PreparedStudyMaterial(
+        text: widget.material.text,
+        attachments: uploadedAttachments,
+      );
+
+      _preparedMaterial = prepared;
+      return prepared;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPreparingMaterial = false;
+        });
+      }
+    }
+  }
+
   Future<void> _loadQuiz() async {
     setState(() {
       _isLoading = true;
@@ -142,9 +246,9 @@ class _QuizPageState extends State<QuizPage> {
     });
 
     try {
-      final List<QuizQuestion> questions = await _aiService.generateQuiz(
-        widget.sourceText,
-      );
+      final PreparedStudyMaterial prepared = await _ensurePreparedMaterial();
+      final List<QuizQuestion> questions =
+          await _aiService.generateQuiz(prepared);
       if (!mounted) return;
       setState(() {
         _questions = questions;
@@ -332,14 +436,17 @@ class _QuizPageState extends State<QuizPage> {
 
                                   // 3. Get AI Summary & Navigate
                                   try {
+                                    final PreparedStudyMaterial prepared =
+                                        _preparedMaterial ??
+                                            await _ensurePreparedMaterial();
                                     final QuizResultsSummary summary =
                                         await _aiService.buildQuizSummary(
-                                          content: widget.sourceText,
+                                          material: prepared,
                                           total: total,
                                           correct: correct,
                                         );
 
-                                    if (!mounted) return;
+                                    if (!context.mounted) return;
 
                                     Navigator.of(context).push(
                                       SmoothPageRoute(
@@ -356,7 +463,7 @@ class _QuizPageState extends State<QuizPage> {
                                       ),
                                     );
                                   } catch (error) {
-                                    if (!mounted) return;
+                                    if (!context.mounted) return;
                                     // Fallback if AI fails
                                     final QuizResultsSummary
                                     fallback = QuizResultsSummary(

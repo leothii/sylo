@@ -440,7 +440,7 @@ class _ScorePageState extends State<ScorePage> {
                             correctIndex != null &&
                             selectedIndex == correctIndex;
 
-                        String _optionLabel(int? optionIndex) {
+                        String optionLabel(int? optionIndex) {
                           if (optionIndex == null) {
                             return 'Not answered';
                           }
@@ -452,8 +452,8 @@ class _ScorePageState extends State<ScorePage> {
                         }
 
                         final String selectedLabel =
-                            _optionLabel(selectedIndex);
-                        final String correctLabel = _optionLabel(correctIndex);
+                          optionLabel(selectedIndex);
+                        final String correctLabel = optionLabel(correctIndex);
 
                         return Container(
                           padding: const EdgeInsets.all(16),

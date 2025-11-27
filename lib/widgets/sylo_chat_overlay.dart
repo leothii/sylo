@@ -71,19 +71,34 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
 
   // --- STREAK CHECKER (Using Smooth Dialog) ---
   Future<void> _checkStreak() async {
-    bool streakUpdated = await StreakService.updateStreak();
+    final bool streakUpdated = await StreakService.updateStreak();
 
-    if (streakUpdated && mounted) {
-      int newCount = await StreakService.getStreakCount();
-      Set<int> activeDays = await StreakService.getActiveWeekdays();
-
-      // APPLIED SMOOTH TRANSITION HERE TOO
-      showSmoothDialog(
-        context: context,
-        builder: (_) =>
-            StreakOverlay(currentStreak: newCount, activeWeekdays: activeDays),
-      );
+    if (!streakUpdated) {
+      return;
     }
+
+    if (!mounted) {
+      return;
+    }
+
+    final int newCount = await StreakService.getStreakCount();
+
+    if (!mounted) {
+      return;
+    }
+
+    final Set<int> activeDays = await StreakService.getActiveWeekdays();
+
+    if (!mounted) {
+      return;
+    }
+
+    // APPLIED SMOOTH TRANSITION HERE TOO
+    await showSmoothDialog(
+      context: context,
+      builder: (_) =>
+          StreakOverlay(currentStreak: newCount, activeWeekdays: activeDays),
+    );
   }
 
   Future<void> _handleSubmitted(String text) async {
@@ -450,7 +465,8 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
                                       Shadow(
                                         offset: const Offset(0, 4),
                                         blurRadius: 4,
-                                        color: Colors.black.withOpacity(0.25),
+                                        color: Colors.black
+                                            .withValues(alpha: 0.25),
                                       ),
                                     ],
                                   ),
@@ -466,7 +482,8 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
                                       Shadow(
                                         offset: const Offset(0, 4),
                                         blurRadius: 4,
-                                        color: Colors.black.withOpacity(0.25),
+                                        color: Colors.black
+                                            .withValues(alpha: 0.25),
                                       ),
                                     ],
                                   ),
