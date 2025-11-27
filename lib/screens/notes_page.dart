@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'settings_overlay.dart';
+import '../services/notes_service.dart';
 import '../widgets/sylo_chat_overlay.dart';
 import 'profile_page.dart';
 import 'music_page.dart';
@@ -32,31 +33,13 @@ class _NotesPageState extends State<NotesPage> {
   static const Color _colNavItem = Color(0xFFE1B964); // Icon color
 
   // Unused now, but kept for reference if you need it later
-  static const Color _colNavActiveBg = Color(0xFF7591A9);
+  final NotesService _notesService = NotesService.instance;
 
-  // --- Data ---
-  final List<_NoteItem> _notes = [
-    _NoteItem(
-      title: 'Lorem Ipsum',
-      description:
-          'Lorem ipsum dolor sit amet. Est laborum voluptatem quo laudantium nisi et suscipit animi et laudantium amet eum omnis tenetur ut animi quia? Est recusandae',
-    ),
-    _NoteItem(
-      title: 'Lorem Ipsum',
-      description:
-          'Lorem ipsum dolor sit amet. Est laborum voluptatem quo laudantium nisi et suscipit animi et laudantium amet eum omnis tenetur ut animi quia? Est recusandae',
-    ),
-    _NoteItem(
-      title: 'Lorem Ipsum',
-      description:
-          'Lorem ipsum dolor sit amet. Est laborum voluptatem quo laudantium nisi et suscipit animi et laudantium amet eum omnis tenetur ut animi quia? Est recusandae',
-    ),
-    _NoteItem(
-      title: 'Lorem Ipsum',
-      description:
-          'Lorem ipsum dolor sit amet. Est laborum voluptatem quo laudantium nisi et suscipit animi et laudantium amet eum omnis tenetur ut animi quia? Est recusandae',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _notesService.ensureLoaded();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -162,15 +145,35 @@ class _NotesPageState extends State<NotesPage> {
 
                     // Scrollable List of Notes
                     Expanded(
-                      child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
-                        ),
-                        itemCount: _notes.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 16),
-                        itemBuilder: (context, index) {
-                          return _buildNoteItem(_notes[index]);
+                      child: ValueListenableBuilder<List<SavedNote>>(
+                        valueListenable: _notesService.notes,
+                        builder: (BuildContext context, List<SavedNote> notes, _) {
+                          if (notes.isEmpty) {
+                            return const Center(
+                              child: Text(
+                                'Notes you save from summaries will appear here.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: _colTextGrey,
+                                  fontSize: 14,
+                                  fontFamily: 'Quicksand',
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            );
+                          }
+
+                          return ListView.separated(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 10,
+                            ),
+                            itemCount: notes.length,
+                            separatorBuilder: (_, __) => const SizedBox(height: 16),
+                            itemBuilder: (BuildContext context, int index) {
+                              return _buildNoteItem(notes[index]);
+                            },
+                          );
                         },
                       ),
                     ),
@@ -228,7 +231,7 @@ class _NotesPageState extends State<NotesPage> {
   }
 
   // Helper widget to build individual note cards
-  Widget _buildNoteItem(_NoteItem note) {
+  Widget _buildNoteItem(SavedNote note) {
     return Container(
       decoration: BoxDecoration(
         color: _colItemGold,
@@ -242,17 +245,37 @@ class _NotesPageState extends State<NotesPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                note.title,
-                style: const TextStyle(
-                  color: _colTextWhite,
-                  fontSize: 14,
-                  fontFamily: 'Quicksand',
-                  fontWeight: FontWeight.w700,
+              Expanded(
+                child: Text(
+                  note.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: _colTextWhite,
+                    fontSize: 14,
+                    fontFamily: 'Quicksand',
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
-              const Icon(Icons.delete_outline, color: _colIconGrey, size: 20),
+              IconButton(
+                onPressed: () => _deleteNote(note),
+                icon: const Icon(Icons.delete_outline, color: _colIconGrey, size: 20),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                splashRadius: 18,
+              ),
             ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Saved on ${_formatTimestamp(note.createdAt)}',
+            style: const TextStyle(
+              color: _colTextWhite,
+              fontSize: 10,
+              fontFamily: 'Quicksand',
+              fontWeight: FontWeight.w500,
+            ),
           ),
           const SizedBox(height: 4),
           // Divider Line
@@ -260,7 +283,7 @@ class _NotesPageState extends State<NotesPage> {
           const SizedBox(height: 4),
           // Description
           Text(
-            note.description,
+            note.body,
             style: const TextStyle(
               color: _colTextGrey,
               fontSize: 10,
@@ -268,15 +291,27 @@ class _NotesPageState extends State<NotesPage> {
               fontWeight: FontWeight.w600,
               height: 1.2,
             ),
+            maxLines: 6,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
     );
   }
-}
 
-class _NoteItem {
-  const _NoteItem({required this.title, required this.description});
-  final String title;
-  final String description;
+  Future<void> _deleteNote(SavedNote note) async {
+    await _notesService.deleteNote(note.id);
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Removed "${note.title}" from notes.')),
+    );
+  }
+
+  String _formatTimestamp(DateTime timestamp) {
+    final DateTime local = timestamp.toLocal();
+    String two(int value) => value.toString().padLeft(2, '0');
+    return '${local.year}-${two(local.month)}-${two(local.day)} ${two(local.hour)}:${two(local.minute)}';
+  }
 }
