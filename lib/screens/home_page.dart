@@ -1,8 +1,16 @@
+// lib/screens/home_page.dart
+
+import 'dart:typed_data';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // For auth state listener
 
 import '../utils/app_colors.dart';
+import '../utils/streak_service.dart';
+import '../models/attachment_payload.dart';
+import '../models/study_material.dart';
+import '../services/gemini_file_service.dart';
 import '../utils/streak_service.dart'; // Streak Service
 import '../utils/smooth_page.dart'; // Smooth Page Route
 import '../widgets/audio_card.dart';
@@ -25,7 +33,11 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final TextEditingController _interestController = TextEditingController();
-  String? _selectedFileName;
+  GeminiLocalAttachment? _selectedAttachment;
+  GeminiFileAttachment? _uploadedAttachment;
+  bool _isUploadingAttachment = false;
+  String? _attachmentError;
+  int _attachmentUploadToken = 0;
 
   // Streak State
   int _streakCount = 0;
@@ -98,7 +110,9 @@ class _HomePageState extends State<HomePage> {
                       _buildTopBar(),
                       const SizedBox(height: 24),
                       _buildWelcomeCard(context),
-                      const SizedBox(height: 32),
+                      SizedBox(
+                        height: _selectedAttachment != null ? 72 : 32,
+                      ),
                       _buildAudioCard(context),
                     ],
                   ),
@@ -158,6 +172,20 @@ class _HomePageState extends State<HomePage> {
         const Spacer(),
 
         // --- FLAME INDICATOR ---
+        GestureDetector(
+          onTap: _showStreakOverlay,
+          child: Container(
+            margin: const EdgeInsets.only(right: 12, top: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.local_fire_department_rounded,
         Container(
           margin: const EdgeInsets.only(right: 12, top: 4),
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -205,8 +233,10 @@ class _HomePageState extends State<HomePage> {
   Widget _buildWelcomeCard(BuildContext context) {
     const Color cardColor = Color(0xFFF8EFDC);
 
-    return SizedBox(
-      height: 320,
+    return AnimatedContainer(
+      height: _welcomeCardHeight(),
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
       child: Stack(
         alignment: Alignment.topCenter,
         clipBehavior: Clip.none,
@@ -232,17 +262,138 @@ class _HomePageState extends State<HomePage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   _buildSearchField(),
-                  if (_selectedFileName != null) ...[
+                  if (_selectedAttachment != null) ...[
                     const SizedBox(height: 12),
-                    Text(
-                      'Selected: $_selectedFileName',
-                      style: const TextStyle(
-                        color: Color(0xFF4D4D4D),
-                        fontSize: 14,
-                        fontFamily: 'Quicksand',
-                        fontWeight: FontWeight.w500,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
                       ),
-                      overflow: TextOverflow.ellipsis,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x14000000),
+                            blurRadius: 18,
+                            offset: Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Icon(
+                                Icons.insert_drive_file,
+                                color: Color(0xFF787878),
+                                size: 22,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _selectedAttachment!.displayName,
+                                      style: const TextStyle(
+                                        color: Color(0xFF4D4D4D),
+                                        fontSize: 14,
+                                        fontFamily: 'Quicksand',
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _formatAttachmentSize(
+                                        _selectedAttachment!.sizeBytes,
+                                      ),
+                                      style: const TextStyle(
+                                        color: Color(0xFF787878),
+                                        fontSize: 12,
+                                        fontFamily: 'Quicksand',
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Remove attachment',
+                                iconSize: 20,
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                                onPressed: () {
+                                  setState(() {
+                                    _attachmentUploadToken++;
+                                    _selectedAttachment = null;
+                                    _uploadedAttachment = null;
+                                    _attachmentError = null;
+                                    _isUploadingAttachment = false;
+                                  });
+                                },
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Color(0xFF676767),
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (_isUploadingAttachment) ...[
+                            const SizedBox(height: 16),
+                            const LinearProgressIndicator(minHeight: 6),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Uploading to Sylo AI...',
+                              style: TextStyle(
+                                color: Color(0xFF898989),
+                                fontSize: 12,
+                                fontFamily: 'Quicksand',
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ] else if (_uploadedAttachment != null) ...[
+                            const SizedBox(height: 16),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.check_circle,
+                                  color: Color(0xFF3FA65C),
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                const Expanded(
+                                  child: Text(
+                                    'Ready — synced with Sylo AI.',
+                                    style: TextStyle(
+                                      color: Color(0xFF3FA65C),
+                                      fontSize: 12,
+                                      fontFamily: 'Quicksand',
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                          if (_attachmentError != null) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              _attachmentError!,
+                              style: const TextStyle(
+                                color: Color(0xFFD9534F),
+                                fontSize: 12,
+                                fontFamily: 'Quicksand',
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                   ],
                   const SizedBox(height: 28),
@@ -285,16 +436,58 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  double _welcomeCardHeight() {
+    double height = 320;
+
+    if (_selectedAttachment != null) {
+      height += 160; // base expansion for attachment card
+
+      if (_isUploadingAttachment || _uploadedAttachment != null) {
+        height += 40; // room for progress or success state
+      }
+
+      if (_attachmentError != null) {
+        height += 40; // room for error message
+      }
+    }
+
+    return height;
+  }
+
+  // --- REFRESH FIX HERE ---
   // --- REFRESH & STREAK LOGIC ---
   void _openSummary() async {
     final String rawText = _interestController.text.trim();
-    if (rawText.isEmpty) {
+    final StudyMaterial material = StudyMaterial(
+      text: rawText.isNotEmpty ? rawText : null,
+      attachments: _selectedAttachment == null
+          ? const <GeminiLocalAttachment>[]
+          : <GeminiLocalAttachment>[_selectedAttachment!],
+    );
+
+    if (material.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
             'Please enter some study material or attach a document.',
           ),
         ),
+      );
+      return;
+    }
+
+    if (_isUploadingAttachment) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Hold on—Sylo is still preparing your attachment.'),
+        ),
+      );
+      return;
+    }
+
+    if (_attachmentError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_attachmentError!)),
       );
       return;
     }
@@ -302,19 +495,36 @@ class _HomePageState extends State<HomePage> {
     // Trigger Streak Update Here!
     await _triggerStreakUpdate();
 
-    if (mounted) {
-      Navigator.of(context)
-          .push(
-            SmoothPageRoute(builder: (_) => SummaryPage(sourceText: rawText)),
-          )
-          .then((_) => _loadStreakData()); // Refresh when returning
+    if (!mounted) {
+      return;
     }
+
+    final PreparedStudyMaterial? initialPrepared =
+        _buildInitialPreparedMaterial(rawText: rawText);
+
+    Navigator.of(context)
+        .push(
+          SmoothPageRoute(
+            builder: (_) => SummaryPage(
+              material: material,
+              initialPreparedMaterial: initialPrepared,
+            ),
+          ),
+        )
+        .then((_) => _loadStreakData()); // Refresh when returning
   }
 
   // --- REFRESH LOGIC ---
   void _openQuiz() {
     final String rawText = _interestController.text.trim();
-    if (rawText.isEmpty) {
+    final StudyMaterial material = StudyMaterial(
+      text: rawText.isNotEmpty ? rawText : null,
+      attachments: _selectedAttachment == null
+          ? const <GeminiLocalAttachment>[]
+          : <GeminiLocalAttachment>[_selectedAttachment!],
+    );
+
+    if (material.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
@@ -325,8 +535,34 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
+    if (_isUploadingAttachment) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Hold on—Sylo is still preparing your attachment.'),
+        ),
+      );
+      return;
+    }
+
+    if (_attachmentError != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_attachmentError!)),
+      );
+      return;
+    }
+
+    final PreparedStudyMaterial? initialPrepared =
+        _buildInitialPreparedMaterial(rawText: rawText);
+
     Navigator.of(context)
-        .push(SmoothPageRoute(builder: (_) => QuizPage(sourceText: rawText)))
+        .push(
+          SmoothPageRoute(
+            builder: (_) => QuizPage(
+              material: material,
+              initialPreparedMaterial: initialPrepared,
+            ),
+          ),
+        )
         .then((_) => _loadStreakData()); // Refresh when returning
   }
 
@@ -390,6 +626,90 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  PreparedStudyMaterial? _buildInitialPreparedMaterial({
+    required String rawText,
+  }) {
+    final String trimmed = rawText.trim();
+    final String? text = trimmed.isEmpty ? null : trimmed;
+
+    if (_uploadedAttachment == null) {
+      if (text == null) {
+        return null;
+      }
+
+      return PreparedStudyMaterial(
+        text: text,
+        attachments: const <GeminiFileAttachment>[],
+      );
+    }
+
+    return PreparedStudyMaterial(
+      text: text,
+      attachments: <GeminiFileAttachment>[_uploadedAttachment!],
+    );
+  }
+
+  Future<void> _beginAttachmentUpload(GeminiLocalAttachment attachment) async {
+    final int token = ++_attachmentUploadToken;
+
+    setState(() {
+      _isUploadingAttachment = true;
+      _attachmentError = null;
+      _uploadedAttachment = null;
+    });
+
+    try {
+      final GeminiFileAttachment uploaded =
+          await GeminiFileService.instance.upload(attachment);
+
+      if (!mounted || token != _attachmentUploadToken) {
+        return;
+      }
+
+      setState(() {
+        _uploadedAttachment = uploaded;
+        _isUploadingAttachment = false;
+      });
+    } catch (error) {
+      if (!mounted || token != _attachmentUploadToken) {
+        return;
+      }
+
+      final String message =
+          error is StateError && error.message.trim().isNotEmpty
+              ? error.message.trim()
+              : 'Unable to upload the attachment. Please try again.';
+
+      setState(() {
+        _attachmentError = message;
+        _isUploadingAttachment = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  }
+
+  String _formatAttachmentSize(int bytes) {
+    if (bytes <= 0) {
+      return 'Unknown size';
+    }
+
+    const int kb = 1024;
+    const int mb = kb * 1024;
+
+    if (bytes >= mb) {
+      return '${(bytes / mb).toStringAsFixed(2)} MB';
+    }
+
+    if (bytes >= kb) {
+      return '${(bytes / kb).toStringAsFixed(1)} KB';
+    }
+
+    return '$bytes B';
+  }
+
   Future<void> _openFilePicker() async {
     const int maxBytes = 10 * 1024 * 1024;
     final List<String> allowedExtensions = [
@@ -412,6 +732,8 @@ class _HomePageState extends State<HomePage> {
         type: FileType.custom,
         allowedExtensions: allowedExtensions,
         allowMultiple: false,
+        withData: true,
+        withReadStream: true,
       );
 
       if (!mounted || result == null || result.files.isEmpty) return;
@@ -429,14 +751,62 @@ class _HomePageState extends State<HomePage> {
         return;
       }
 
+      Uint8List? bytes = file.bytes;
+
+      if (bytes == null && file.readStream != null) {
+        final List<int> collected = <int>[];
+        await for (final List<int> chunk in file.readStream!) {
+          collected.addAll(chunk);
+          if (collected.length > maxBytes) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Please choose a file smaller than 10 MB.'),
+              ),
+            );
+            return;
+          }
+        }
+        bytes = Uint8List.fromList(collected);
+      }
+
+      if (bytes == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Unable to read the selected file. Please try again.'),
+          ),
+        );
+        return;
+      }
+
+      if (bytes.lengthInBytes > maxBytes) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please choose a file smaller than 10 MB.'),
+          ),
+        );
+        return;
+      }
+
+      final GeminiLocalAttachment attachment = GeminiLocalAttachment(
+        bytes: bytes,
+        displayName: file.name,
+        mimeType: GeminiFileService.inferMimeType(file.extension),
+      );
+
       setState(() {
-        _selectedFileName = file.name;
+        _selectedAttachment = attachment;
+        _attachmentError = null;
       });
 
+      _beginAttachmentUpload(attachment);
+
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Selected "${file.name}"')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Selected "${file.name}"')),
+      );
     } catch (error) {
       debugPrint('File picker error: $error');
       if (!mounted) return;

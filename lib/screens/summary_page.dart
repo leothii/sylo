@@ -3,21 +3,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../models/study_material.dart';
+import '../models/attachment_payload.dart';
 import '../services/ai_service.dart';
+import '../services/gemini_file_service.dart';
 import '../services/notes_service.dart';
 import '../utils/smooth_page.dart';
 import '../widgets/sylo_chat_overlay.dart';
 import '../widgets/icon_badge.dart';
 import '../widgets/sound_toggle_button.dart';
+import '../widgets/attachment_upload_status.dart';
 import 'home_page.dart';
 import 'music_page.dart';
 import 'profile_page.dart';
 import 'settings_overlay.dart';
 
 class SummaryPage extends StatefulWidget {
-  const SummaryPage({super.key, required this.sourceText});
+  const SummaryPage({
+    super.key,
+    required this.material,
+    this.initialPreparedMaterial,
+  });
 
-  final String sourceText;
+  final StudyMaterial material;
+  final PreparedStudyMaterial? initialPreparedMaterial;
 
   @override
   State<SummaryPage> createState() => _SummaryPageState();
@@ -26,6 +35,8 @@ class SummaryPage extends StatefulWidget {
 class _SummaryPageState extends State<SummaryPage> {
   final AIService _aiService = AIService();
   final NotesService _notesService = NotesService.instance;
+  PreparedStudyMaterial? _preparedMaterial;
+  bool _isPreparingMaterial = false;
 
   // --- Layout Constants ---
   final double _owlHeight = 150;
@@ -71,7 +82,47 @@ class _SummaryPageState extends State<SummaryPage> {
   void initState() {
     super.initState();
     _notesService.ensureLoaded();
+    _preparedMaterial = widget.initialPreparedMaterial;
     _loadSummary();
+  }
+
+  Future<PreparedStudyMaterial> _ensurePreparedMaterial() async {
+    if (_preparedMaterial != null) {
+      return _preparedMaterial!;
+    }
+
+    if (!widget.material.hasAttachments) {
+      final PreparedStudyMaterial prepared = PreparedStudyMaterial(
+        text: widget.material.text,
+        attachments: const <GeminiFileAttachment>[],
+      );
+      _preparedMaterial = prepared;
+      return prepared;
+    }
+
+    setState(() {
+      _isPreparingMaterial = true;
+    });
+
+    try {
+      final List<GeminiFileAttachment> uploadedAttachments =
+          await GeminiFileService.instance
+              .uploadAll(widget.material.attachments);
+
+      final PreparedStudyMaterial prepared = PreparedStudyMaterial(
+        text: widget.material.text,
+        attachments: uploadedAttachments,
+      );
+
+      _preparedMaterial = prepared;
+      return prepared;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPreparingMaterial = false;
+        });
+      }
+    }
   }
 
   Future<void> _loadSummary() async {
@@ -82,8 +133,8 @@ class _SummaryPageState extends State<SummaryPage> {
     });
 
     try {
-      final StudySummary summary =
-          await _aiService.summarize(widget.sourceText);
+      final PreparedStudyMaterial prepared = await _ensurePreparedMaterial();
+      final StudySummary summary = await _aiService.summarize(prepared);
       if (!mounted) return;
       setState(() {
         _summary = summary;
@@ -222,8 +273,8 @@ class _SummaryPageState extends State<SummaryPage> {
                             onTap: _isLoading ? null : _copySummaryToClipboard,
                             child: Icon(
                               Icons.content_paste,
-                              color: _isLoading || _summary == null
-                                  ? _colIconGrey.withOpacity(0.35)
+                                color: _isLoading || _summary == null
+                                  ? _colIconGrey.withValues(alpha: 0.35)
                                   : _colIconGrey,
                               size: 28,
                             ),
@@ -244,7 +295,7 @@ class _SummaryPageState extends State<SummaryPage> {
                                 : Icon(
                                     Icons.note_add_outlined,
                                     color: _isLoading || _summary == null
-                                        ? _colIconGrey.withOpacity(0.35)
+                                      ? _colIconGrey.withValues(alpha: 0.35)
                                         : _colIconGrey,
                                     size: 28,
                                   ),
@@ -299,8 +350,12 @@ class _SummaryPageState extends State<SummaryPage> {
   }
 
   Widget _buildSummaryBody() {
+    if (_isPreparingMaterial) {
+      return _buildProgressBody('Uploading attachment...');
+    }
+
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return _buildProgressBody('Generating study brief...');
     }
 
     if (_errorMessage != null) {
@@ -342,6 +397,35 @@ class _SummaryPageState extends State<SummaryPage> {
       child: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
         children: _buildSummaryContent(_summary!),
+      ),
+    );
+  }
+
+  Widget _buildProgressBody(String message) {
+    final bool showAttachmentProgress =
+        _isPreparingMaterial && widget.material.hasAttachments;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (showAttachmentProgress) ...[
+            AttachmentUploadStatus(
+              attachments: widget.material.attachments,
+              showProgress: true,
+            ),
+            const SizedBox(height: 24),
+          ],
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: _bodyTextStyle,
+          ),
+        ],
       ),
     );
   }
