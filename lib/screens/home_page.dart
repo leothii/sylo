@@ -14,6 +14,7 @@ import '../utils/streak_service.dart';
 import '../widgets/audio_card.dart';
 import '../widgets/streak_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
+import '../widgets/sound_toggle_button.dart';
 import 'music_page.dart';
 import 'notes_page.dart';
 import 'profile_page.dart';
@@ -187,10 +188,7 @@ class _HomePageState extends State<HomePage> {
               onTap: _openSettingsOverlay,
             ),
             const SizedBox(height: 18),
-            const _IconBadge(
-              assetPath: 'assets/icons/sound.png',
-              size: 30,
-            ),
+            const SoundToggleButton(size: 30),
           ],
         ),
       ],

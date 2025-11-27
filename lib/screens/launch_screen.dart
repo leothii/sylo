@@ -185,7 +185,7 @@ class _LaunchScreenState extends State<LaunchScreen> {
                   Icon(Icons.headset, color: Color(0xFFF1F1F1), size: 30),
                   SizedBox(width: 40),
                   Icon(
-                    Icons.lightbulb_outline,
+                    Icons.lightbulb,
                     color: Color(0xFFF1F1F1),
                     size: 30,
                   ),
