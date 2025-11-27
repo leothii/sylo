@@ -1,9 +1,9 @@
-// lib/screens/home_page.dart
-
 import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/attachment_payload.dart';
 import '../models/study_material.dart';
@@ -15,6 +15,8 @@ import '../widgets/audio_card.dart';
 import '../widgets/streak_overlay.dart';
 import '../widgets/sylo_chat_overlay.dart';
 import '../widgets/sound_toggle_button.dart';
+import '../widgets/welcome_bubble.dart';
+
 import 'music_page.dart';
 import 'notes_page.dart';
 import 'profile_page.dart';
@@ -39,20 +41,31 @@ class _HomePageState extends State<HomePage> {
 
   int _streakCount = 0;
   bool _hasChattedToday = false;
+  bool _showWelcomeBubble = false;
+
+  // --- CONSTANTS FOR LAYOUT FIX ---
+  final double _topPaddingBuffer =
+      130.0; // Space for bubble to be "inside" bounds
 
   @override
   void initState() {
     super.initState();
+
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user != null && mounted) {
+        _loadStreakData();
+      }
+    });
+
     _loadStreakData();
+    _checkWelcomeBubble();
   }
 
   Future<void> _loadStreakData() async {
     final int count = await StreakService.getStreakCount();
     final bool hasChatted = await StreakService.hasChattedToday();
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     setState(() {
       _streakCount = count;
@@ -60,13 +73,35 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<void> _checkWelcomeBubble() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool hide = prefs.getBool('hide_welcome_bubble') ?? false;
+
+    if (!hide && mounted) {
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (mounted) {
+        setState(() {
+          _showWelcomeBubble = true;
+        });
+      }
+    }
+  }
+
   Future<void> _triggerStreakUpdate() async {
     final bool streakUpdated = await StreakService.updateStreak();
-    if (!streakUpdated || !mounted) {
-      return;
-    }
 
-    await _showStreakOverlay();
+    if (streakUpdated && mounted) {
+      final int newCount = await StreakService.getStreakCount();
+      final Set<int> activeDays = await StreakService.getActiveWeekdays();
+
+      await showSmoothDialog(
+        context: context,
+        builder: (_) =>
+            StreakOverlay(currentStreak: newCount, activeWeekdays: activeDays),
+      );
+
+      _loadStreakData();
+    }
   }
 
   @override
@@ -88,12 +123,21 @@ class _HomePageState extends State<HomePage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _buildTopBar(),
-                      const SizedBox(height: 24),
-                      _buildWelcomeCard(context),
-                      SizedBox(
-                        height: _selectedAttachment != null ? 72 : 32,
+                      // Removed SizedBox(24) here because the card now has built-in top padding
+
+                      // Transform pulls the card UP visually to match original design
+                      // but keeps the touch area valid for the bubble.
+                      Transform.translate(
+                        offset: Offset(0, -40), // Fine tune position here
+                        child: _buildWelcomeCard(context),
                       ),
-                      _buildAudioCard(context),
+
+                      SizedBox(height: _selectedAttachment != null ? 72 : 32),
+                      // Pull Audio Card up a bit to close the gap left by Transform
+                      Transform.translate(
+                        offset: const Offset(0, -65),
+                        child: _buildAudioCard(context),
+                      ),
                     ],
                   ),
                 ),
@@ -115,13 +159,13 @@ class _HomePageState extends State<HomePage> {
     showDialog(
       context: context,
       builder: (context) => const SettingsOverlay(),
-    ).then((_) => _loadStreakData()); // Refresh on return
+    ).then((_) => _loadStreakData());
   }
 
   Widget _buildTopBar() {
     final Color flameColor = _hasChattedToday
-        ? const Color(0xFFFFA000) // Orange
-        : const Color(0xFFAAAAAA); // Pale Grey
+        ? const Color(0xFFFFA000)
+        : const Color(0xFFAAAAAA);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,9 +176,9 @@ class _HomePageState extends State<HomePage> {
               assetPath: 'assets/icons/profile.png',
               size: 30,
               onTap: () {
-                Navigator.of(context).push(
-                  SmoothPageRoute(builder: (_) => const ProfilePage()),
-                );
+                Navigator.of(
+                  context,
+                ).push(SmoothPageRoute(builder: (_) => const ProfilePage()));
               },
             ),
             const SizedBox(height: 18),
@@ -142,16 +186,27 @@ class _HomePageState extends State<HomePage> {
               assetPath: 'assets/icons/note.png',
               size: 30,
               onTap: () {
-                Navigator.of(context).push(
-                  SmoothPageRoute(builder: (_) => const NotesPage()),
-                );
+                Navigator.of(
+                  context,
+                ).push(SmoothPageRoute(builder: (_) => const NotesPage()));
               },
             ),
           ],
         ),
         const Spacer(),
+
         GestureDetector(
-          onTap: _showStreakOverlay,
+          onTap: () async {
+            final int count = await StreakService.getStreakCount();
+            final Set<int> days = await StreakService.getActiveWeekdays();
+            if (mounted) {
+              showSmoothDialog(
+                context: context,
+                builder: (_) =>
+                    StreakOverlay(currentStreak: count, activeWeekdays: days),
+              );
+            }
+          },
           child: Container(
             margin: const EdgeInsets.only(right: 12, top: 4),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -180,6 +235,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ),
+
         Column(
           children: [
             _IconBadge(
@@ -195,40 +251,27 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _showStreakOverlay() async {
-    final int newCount = await StreakService.getStreakCount();
-    final Set<int> activeDays = await StreakService.getActiveWeekdays();
-
-    if (!mounted) {
-      return;
-    }
-
-    await showSmoothDialog(
-      context: context,
-      builder: (_) => StreakOverlay(
-        currentStreak: newCount,
-        activeWeekdays: activeDays,
-      ),
-    );
-
-    if (mounted) {
-      _loadStreakData();
-    }
-  }
-
   Widget _buildWelcomeCard(BuildContext context) {
     const Color cardColor = Color(0xFFF8EFDC);
 
+    // Shift everything DOWN by _topPaddingBuffer so
+    // 0,0 is actually 130px above the card body
+    final double cardTop = 80 + _topPaddingBuffer;
+    final double owlTop = -42 + _topPaddingBuffer;
+    final double bubbleTop = -115 + _topPaddingBuffer;
+
     return AnimatedContainer(
-      height: _welcomeCardHeight(),
       duration: const Duration(milliseconds: 250),
+      // Add buffer to height so container is big enough to hold bubble
+      height: _welcomeCardHeight() + _topPaddingBuffer,
       curve: Curves.easeInOut,
       child: Stack(
         alignment: Alignment.topCenter,
         clipBehavior: Clip.none,
         children: [
+          // --- CARD BODY ---
           Positioned(
-            top: 80,
+            top: cardTop, // 210
             left: 0,
             right: 0,
             child: Container(
@@ -251,10 +294,7 @@ class _HomePageState extends State<HomePage> {
                   if (_selectedAttachment != null) ...[
                     const SizedBox(height: 12),
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(18),
@@ -309,7 +349,10 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                               IconButton(
-                                tooltip: 'Remove attachment',
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Color(0xFF676767),
+                                ),
                                 iconSize: 20,
                                 padding: EdgeInsets.zero,
                                 constraints: const BoxConstraints(),
@@ -322,10 +365,6 @@ class _HomePageState extends State<HomePage> {
                                     _isUploadingAttachment = false;
                                   });
                                 },
-                                icon: const Icon(
-                                  Icons.close,
-                                  color: Color(0xFF676767),
-                                ),
                               ),
                             ],
                           ),
@@ -344,15 +383,15 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ] else if (_uploadedAttachment != null) ...[
                             const SizedBox(height: 16),
-                            Row(
+                            const Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.check_circle,
                                   color: Color(0xFF3FA65C),
                                   size: 18,
                                 ),
-                                const SizedBox(width: 8),
-                                const Expanded(
+                                SizedBox(width: 8),
+                                Expanded(
                                   child: Text(
                                     'Ready — synced with Sylo AI.',
                                     style: TextStyle(
@@ -402,13 +441,15 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
+
+          // --- OWL TAP ---
           Positioned(
-            top: -42,
+            top: owlTop, // 88
             left: -10,
             child: GestureDetector(
               onTap: () async {
                 await showSyloChatOverlay(context);
-                _loadStreakData(); // Refresh flame on return
+                _loadStreakData();
               },
               child: Image.asset(
                 'assets/images/sylo.png',
@@ -417,6 +458,20 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           ),
+
+          // --- WELCOME BUBBLE ---
+          if (_showWelcomeBubble)
+            Positioned(
+              top: bubbleTop, // 15 (Positive value! Clickable!)
+              left: 65,
+              child: WelcomeBubble(
+                onClose: () {
+                  setState(() {
+                    _showWelcomeBubble = false;
+                  });
+                },
+              ),
+            ),
         ],
       ),
     );
@@ -424,24 +479,20 @@ class _HomePageState extends State<HomePage> {
 
   double _welcomeCardHeight() {
     double height = 320;
-
     if (_selectedAttachment != null) {
-      height += 160; // base expansion for attachment card
-
+      height += 100;
       if (_isUploadingAttachment || _uploadedAttachment != null) {
-        height += 40; // room for progress or success state
+        height += 40;
       }
-
       if (_attachmentError != null) {
-        height += 40; // room for error message
+        height += 40;
       }
     }
-
     return height;
   }
 
-  // --- REFRESH FIX HERE ---
-  // --- REFRESH & STREAK LOGIC ---
+  // ... (Rest of logic is unchanged) ...
+
   void _openSummary() async {
     final String rawText = _interestController.text.trim();
     final StudyMaterial material = StudyMaterial(
@@ -472,18 +523,15 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (_attachmentError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_attachmentError!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_attachmentError!)));
       return;
     }
 
-    // Trigger Streak Update Here!
     await _triggerStreakUpdate();
 
-    if (!mounted) {
-      return;
-    }
+    if (!mounted) return;
 
     final PreparedStudyMaterial? initialPrepared =
         _buildInitialPreparedMaterial(rawText: rawText);
@@ -497,10 +545,9 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         )
-        .then((_) => _loadStreakData()); // Refresh when returning
+        .then((_) => _loadStreakData());
   }
 
-  // --- REFRESH LOGIC ---
   void _openQuiz() {
     final String rawText = _interestController.text.trim();
     final StudyMaterial material = StudyMaterial(
@@ -531,9 +578,9 @@ class _HomePageState extends State<HomePage> {
     }
 
     if (_attachmentError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(_attachmentError!)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(_attachmentError!)));
       return;
     }
 
@@ -549,7 +596,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         )
-        .then((_) => _loadStreakData()); // Refresh when returning
+        .then((_) => _loadStreakData());
   }
 
   Widget _buildSearchField() {
@@ -617,18 +664,13 @@ class _HomePageState extends State<HomePage> {
   }) {
     final String trimmed = rawText.trim();
     final String? text = trimmed.isEmpty ? null : trimmed;
-
     if (_uploadedAttachment == null) {
-      if (text == null) {
-        return null;
-      }
-
+      if (text == null) return null;
       return PreparedStudyMaterial(
         text: text,
         attachments: const <GeminiFileAttachment>[],
       );
     }
-
     return PreparedStudyMaterial(
       text: text,
       attachments: <GeminiFileAttachment>[_uploadedAttachment!],
@@ -637,7 +679,6 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _beginAttachmentUpload(GeminiLocalAttachment attachment) async {
     final int token = ++_attachmentUploadToken;
-
     setState(() {
       _isUploadingAttachment = true;
       _attachmentError = null;
@@ -645,54 +686,35 @@ class _HomePageState extends State<HomePage> {
     });
 
     try {
-      final GeminiFileAttachment uploaded =
-          await GeminiFileService.instance.upload(attachment);
-
-      if (!mounted || token != _attachmentUploadToken) {
-        return;
-      }
-
+      final GeminiFileAttachment uploaded = await GeminiFileService.instance
+          .upload(attachment);
+      if (!mounted || token != _attachmentUploadToken) return;
       setState(() {
         _uploadedAttachment = uploaded;
         _isUploadingAttachment = false;
       });
     } catch (error) {
-      if (!mounted || token != _attachmentUploadToken) {
-        return;
-      }
-
+      if (!mounted || token != _attachmentUploadToken) return;
       final String message =
           error is StateError && error.message.trim().isNotEmpty
-              ? error.message.trim()
-              : 'Unable to upload the attachment. Please try again.';
-
+          ? error.message.trim()
+          : 'Unable to upload the attachment. Please try again.';
       setState(() {
         _attachmentError = message;
         _isUploadingAttachment = false;
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 
   String _formatAttachmentSize(int bytes) {
-    if (bytes <= 0) {
-      return 'Unknown size';
-    }
-
+    if (bytes <= 0) return 'Unknown size';
     const int kb = 1024;
     const int mb = kb * 1024;
-
-    if (bytes >= mb) {
-      return '${(bytes / mb).toStringAsFixed(2)} MB';
-    }
-
-    if (bytes >= kb) {
-      return '${(bytes / kb).toStringAsFixed(1)} KB';
-    }
-
+    if (bytes >= mb) return '${(bytes / mb).toStringAsFixed(2)} MB';
+    if (bytes >= kb) return '${(bytes / kb).toStringAsFixed(1)} KB';
     return '$bytes B';
   }
 
@@ -738,7 +760,6 @@ class _HomePageState extends State<HomePage> {
       }
 
       Uint8List? bytes = file.bytes;
-
       if (bytes == null && file.readStream != null) {
         final List<int> collected = <int>[];
         await for (final List<int> chunk in file.readStream!) {
@@ -760,7 +781,9 @@ class _HomePageState extends State<HomePage> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Unable to read the selected file. Please try again.'),
+            content: Text(
+              'Unable to read the selected file. Please try again.',
+            ),
           ),
         );
         return;
@@ -786,13 +809,11 @@ class _HomePageState extends State<HomePage> {
         _selectedAttachment = attachment;
         _attachmentError = null;
       });
-
       _beginAttachmentUpload(attachment);
-
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Selected "${file.name}"')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Selected "${file.name}"')));
     } catch (error) {
       debugPrint('File picker error: $error');
       if (!mounted) return;
@@ -844,9 +865,7 @@ class _ActionButton extends StatelessWidget {
         ],
       ),
     );
-
     if (onTap == null) return buttonContent;
-
     return Material(
       color: Colors.transparent,
       child: InkWell(

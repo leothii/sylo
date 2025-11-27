@@ -1,44 +1,26 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart'; // Needed for Auth check
 import 'login_page.dart';
-import 'home_page.dart'; // Needed for navigation
+import 'home_page.dart';
 
-class LaunchScreen extends StatefulWidget {
+class LaunchScreen extends StatelessWidget {
   const LaunchScreen({super.key});
 
-  @override
-  State<LaunchScreen> createState() => _LaunchScreenState();
-}
+  void _handleStart(BuildContext context) {
+    // 1. Check if user is logged in
+    final User? user = FirebaseAuth.instance.currentUser;
 
-class _LaunchScreenState extends State<LaunchScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Start the check immediately
-    _navigateToNextScreen();
-  }
-
-  void _navigateToNextScreen() {
-    // 1. Wait 3 seconds for the animation/branding
-    Timer(const Duration(seconds: 3), () {
-      if (!mounted) return;
-
-      // 2. Check if user is logged in
-      final User? user = FirebaseAuth.instance.currentUser;
-
-      if (user != null) {
-        // User is logged in -> Go Home (Streak will be preserved!)
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomePage()),
-        );
-      } else {
-        // User is NOT logged in -> Go to Login
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-        );
-      }
-    });
+    if (user != null) {
+      // Logged In -> Go to Home (Streak Preserved)
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomePage()),
+      );
+    } else {
+      // Not Logged In -> Go to Login
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
+    }
   }
 
   @override
@@ -50,7 +32,7 @@ class _LaunchScreenState extends State<LaunchScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Column(
             children: [
-              // Version Number (Top Left)
+              // Version Number
               const Align(
                 alignment: Alignment.topLeft,
                 child: Padding(
@@ -67,10 +49,9 @@ class _LaunchScreenState extends State<LaunchScreen> {
                 ),
               ),
 
-              // Spacer to push content to center
               const Spacer(flex: 2),
 
-              // Logo Text "sylo"
+              // Logo Text
               Text.rich(
                 TextSpan(
                   children: [
@@ -85,8 +66,7 @@ class _LaunchScreenState extends State<LaunchScreen> {
                           Shadow(
                             offset: const Offset(0, 4),
                             blurRadius: 4,
-                            color: const Color(0xFF000000)
-                                .withValues(alpha: 0.25),
+                            color: const Color(0xFF000000).withOpacity(0.25),
                           ),
                         ],
                       ),
@@ -102,8 +82,7 @@ class _LaunchScreenState extends State<LaunchScreen> {
                           Shadow(
                             offset: const Offset(0, 4),
                             blurRadius: 4,
-                            color: const Color(0xFF000000)
-                                .withValues(alpha: 0.25),
+                            color: const Color(0xFF000000).withOpacity(0.25),
                           ),
                         ],
                       ),
@@ -114,14 +93,14 @@ class _LaunchScreenState extends State<LaunchScreen> {
 
               const SizedBox(height: 0),
 
-              // Owl with Start Button Stack (Visual Only now, logic handled by Timer)
+              // Owl & Start Button
               SizedBox(
                 height: 273,
                 child: Stack(
                   clipBehavior: Clip.none,
                   alignment: Alignment.center,
                   children: [
-                    // START BUTTON (Visual placeholder, since timer auto-navigates)
+                    // START BUTTON (Now Functional)
                     Positioned(
                       bottom: 40,
                       child: Container(
@@ -141,20 +120,29 @@ class _LaunchScreenState extends State<LaunchScreen> {
                             ),
                           ],
                         ),
-                        child: const Center(
-                          child: Text(
-                            'start',
-                            style: TextStyle(
-                              color: Color(0xFF882124),
-                              fontSize: 22,
-                              fontFamily: 'Quicksand',
-                              fontWeight: FontWeight.w500,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            // --- ON TAP LOGIC HERE ---
+                            onTap: () => _handleStart(context),
+                            borderRadius: BorderRadius.circular(10),
+                            child: const Center(
+                              child: Text(
+                                'start',
+                                style: TextStyle(
+                                  color: Color(0xFF882124),
+                                  fontSize: 22,
+                                  fontFamily: 'Quicksand',
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                    // OWL IMAGE
+
+                    // Owl Image (Pointer Ignored so you can click button behind if needed)
                     Positioned(
                       top: -20,
                       left: 0,
@@ -175,7 +163,6 @@ class _LaunchScreenState extends State<LaunchScreen> {
                 ),
               ),
 
-              // Spacer to push bottom icons down
               const Spacer(flex: 3),
 
               // Bottom Icons
@@ -185,7 +172,7 @@ class _LaunchScreenState extends State<LaunchScreen> {
                   Icon(Icons.headset, color: Color(0xFFF1F1F1), size: 30),
                   SizedBox(width: 40),
                   Icon(
-                    Icons.lightbulb,
+                    Icons.lightbulb_outline,
                     color: Color(0xFFF1F1F1),
                     size: 30,
                   ),
