@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../services/ai_service.dart';
+import '../services/notes_service.dart';
 import '../utils/smooth_page.dart';
 import '../widgets/sylo_chat_overlay.dart';
 import 'home_page.dart';
@@ -22,6 +23,7 @@ class SummaryPage extends StatefulWidget {
 
 class _SummaryPageState extends State<SummaryPage> {
   final AIService _aiService = AIService();
+  final NotesService _notesService = NotesService.instance;
 
   // --- Layout Constants ---
   final double _owlHeight = 150;
@@ -40,6 +42,7 @@ class _SummaryPageState extends State<SummaryPage> {
   StudySummary? _summary;
   String? _errorMessage;
   bool _isLoading = true;
+  bool _isSavingNote = false;
 
   static const TextStyle _titleTextStyle = TextStyle(
     color: _colTitleRed,
@@ -65,6 +68,7 @@ class _SummaryPageState extends State<SummaryPage> {
   @override
   void initState() {
     super.initState();
+    _notesService.ensureLoaded();
     _loadSummary();
   }
 
@@ -210,8 +214,27 @@ class _SummaryPageState extends State<SummaryPage> {
                               size: 28,
                             ),
                           ),
-                          const Icon(Icons.ios_share,
-                              color: _colIconGrey, size: 28),
+                          GestureDetector(
+                            onTap: (_isLoading || _summary == null || _isSavingNote)
+                                ? null
+                                : _saveSummaryToNotes,
+                            child: _isSavingNote
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.4,
+                                      valueColor: AlwaysStoppedAnimation<Color>(_colIconGrey),
+                                    ),
+                                  )
+                                : Icon(
+                                    Icons.note_add_outlined,
+                                    color: _isLoading || _summary == null
+                                        ? _colIconGrey.withOpacity(0.35)
+                                        : _colIconGrey,
+                                    size: 28,
+                                  ),
+                          ),
                         ],
                       ),
                     ),
@@ -323,6 +346,8 @@ class _SummaryPageState extends State<SummaryPage> {
 
     if (summary.overview.isNotEmpty) {
       children.addAll(const <Widget>[SizedBox(height: 16)]);
+      children.add(const Text('Overview', style: _sectionHeadingStyle));
+      children.addAll(const <Widget>[SizedBox(height: 8)]);
       children.add(Text(summary.overview, style: _bodyTextStyle));
     }
 
@@ -338,9 +363,9 @@ class _SummaryPageState extends State<SummaryPage> {
       ]);
     }
 
-    addSection('Key Points', summary.keyPoints);
-    addSection('Study Tips', summary.studyTips);
-    addSection('Suggested Follow-up', summary.followUp);
+    addSection('Key Insights', summary.keyInsights);
+    addSection('Supporting Details', summary.supportingDetails);
+    addSection('Next Steps & Open Questions', summary.nextSteps);
 
     return children;
   }
@@ -384,6 +409,7 @@ class _SummaryPageState extends State<SummaryPage> {
 
     if (summary.overview.isNotEmpty) {
       buffer
+        ..writeln('Overview')
         ..writeln(summary.overview)
         ..writeln();
     }
@@ -399,9 +425,9 @@ class _SummaryPageState extends State<SummaryPage> {
         ..writeln();
     }
 
-    appendSection('Key Points', summary.keyPoints);
-    appendSection('Study Tips', summary.studyTips);
-    appendSection('Suggested Follow-up', summary.followUp);
+    appendSection('Key Insights', summary.keyInsights);
+    appendSection('Supporting Details', summary.supportingDetails);
+    appendSection('Next Steps & Open Questions', summary.nextSteps);
 
     await Clipboard.setData(ClipboardData(text: buffer.toString().trim()));
 
@@ -410,5 +436,59 @@ class _SummaryPageState extends State<SummaryPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Summary copied to clipboard.')),
     );
+  }
+
+  Future<void> _saveSummaryToNotes() async {
+    final StudySummary? summary = _summary;
+    if (summary == null || _isSavingNote) {
+      return;
+    }
+
+    setState(() => _isSavingNote = true);
+
+    try {
+      final StringBuffer buffer = StringBuffer()
+        ..writeln('Overview')
+        ..writeln(summary.overview)
+        ..writeln();
+
+      void appendSection(String heading, List<String> items) {
+        if (items.isEmpty) {
+          return;
+        }
+        buffer
+          ..writeln(heading)
+          ..writeAll(items.map((String item) => '- $item'), '\n')
+          ..writeln()
+          ..writeln();
+      }
+
+      appendSection('Key Insights', summary.keyInsights);
+      appendSection('Supporting Details', summary.supportingDetails);
+      appendSection('Next Steps & Open Questions', summary.nextSteps);
+
+      await _notesService.addNote(
+        title: summary.title,
+        body: buffer.toString().trim(),
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Summary saved to notes.')),
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to save summary: $error')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSavingNote = false);
+      }
+    }
   }
 }

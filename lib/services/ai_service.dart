@@ -8,16 +8,16 @@ class StudySummary {
   const StudySummary({
     required this.title,
     required this.overview,
-    required this.keyPoints,
-    required this.studyTips,
-    required this.followUp,
+    required this.keyInsights,
+    required this.supportingDetails,
+    required this.nextSteps,
   });
 
   final String title;
   final String overview;
-  final List<String> keyPoints;
-  final List<String> studyTips;
-  final List<String> followUp;
+  final List<String> keyInsights;
+  final List<String> supportingDetails;
+  final List<String> nextSteps;
 
   factory StudySummary.fromJson(Map<String, dynamic> json) {
     List<String> toList(dynamic value) {
@@ -30,9 +30,9 @@ class StudySummary {
     return StudySummary(
       title: (json['title'] as String?)?.trim() ?? 'Study Brief',
       overview: (json['overview'] as String?)?.trim() ?? '',
-      keyPoints: toList(json['keyPoints']),
-      studyTips: toList(json['studyTips']),
-      followUp: toList(json['followUp']),
+      keyInsights: toList(json['keyInsights'] ?? json['keyPoints']),
+      supportingDetails: toList(json['supportingDetails'] ?? json['studyTips']),
+      nextSteps: toList(json['nextSteps'] ?? json['followUp']),
     );
   }
 }
@@ -129,16 +129,20 @@ class AIService {
 
     final String prompt = '''
 You are Sylo, a warm and precise academic study coach.
-Create a concise study brief for the learner using the provided material.
+Create an informative study brief that highlights what the learner must remember.
 Respond with JSON that matches this schema:
 {
   "title": string,
   "overview": string,
-  "keyPoints": [string, ...],
-  "studyTips": [string, ...],
-  "followUp": [string, ...]
+  "keyInsights": [string, ...],
+  "supportingDetails": [string, ...],
+  "nextSteps": [string, ...]
 }
-Keep language accessible, avoid markdown bullets inside strings, and rely only on supplied content.
+Guidelines:
+- Emphasize concise, factual statements; avoid generic study advice.
+- Use supportingDetails for brief explanations, evidence, or context.
+- Populate nextSteps with open questions, practical applications, or related topics to explore.
+- Keep language accessible, avoid markdown bullets inside strings, and rely only on the supplied content.
 
 CONTENT:
 $trimmed
