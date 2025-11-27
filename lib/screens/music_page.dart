@@ -338,7 +338,7 @@ class _MusicPageState extends State<MusicPage> {
 
                     _buildActionButton(
                       text: 'upload an audio',
-                      icon: Icons.file_upload_outlined,
+                      icon: Icon(Icons.file_upload_outlined, color: _colTextGrey, size: 20),
                       bgColor: _colBtnCream,
                       textColor: _colTextGrey,
                       onTap: _pickAudio,
@@ -366,7 +366,15 @@ class _MusicPageState extends State<MusicPage> {
                       builder: (BuildContext context, SpotifySession? session, _) {
                         final bool connected = session != null;
                         final String buttonLabel = connected ? 'open spotify player' : 'connect to spotify';
-                        final IconData buttonIcon = connected ? Icons.play_circle_fill : Icons.wifi;
+                        // Use the Spotify asset for the button in both states.
+                        // When disconnected we render it with reduced opacity to indicate inactive state.
+                        final Widget buttonIcon = ImageIcon(
+                          const AssetImage('assets/icons/spotify.png'),
+                          size: 22,
+                          color: connected
+                              ? _colTextGrey
+                              : _colTextGrey.withValues(alpha: 0.5),
+                        );
                         final VoidCallback action = connected ? _openSpotifyPlayer : _connectSpotify;
                         final bool enabled = connected || Env.hasSpotifyCredentials;
 
@@ -458,7 +466,7 @@ class _MusicPageState extends State<MusicPage> {
 
   Widget _buildActionButton({
     required String text,
-    required IconData icon,
+    required Widget icon,
     required Color bgColor,
     required Color textColor,
     required VoidCallback onTap,
@@ -492,7 +500,7 @@ class _MusicPageState extends State<MusicPage> {
                 ),
               )
             else
-              Icon(icon, color: textColor, size: 20),
+              icon,
             const SizedBox(width: 8),
             Text(
               text,

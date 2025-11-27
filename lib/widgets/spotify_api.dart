@@ -56,17 +56,16 @@ class _SpotifyApiOverlayState extends State<SpotifyApiOverlay> {
               children: [
                 Row(
                   children: [
-                    Container(
+                    SizedBox(
                       width: 26,
                       height: 26,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
+                      child: Center(
+                        child: const ImageIcon(
+                          AssetImage('assets/icons/spotify.png'),
+                          size: 30,
                           color: SpotifyApiOverlay._colTextGrey,
-                          width: 1.6,
                         ),
                       ),
-                      child: const Icon(Icons.wifi, size: 16, color: SpotifyApiOverlay._colTextGrey),
                     ),
                     const SizedBox(width: 10),
                     const Expanded(

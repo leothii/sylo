@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../utils/env.dart'; // <--- Back to your original Env class
 import '../utils/streak_service.dart';
@@ -12,13 +14,27 @@ import '../widgets/streak_overlay.dart';
 // --- VISUAL CONSTANTS ---
 const Offset kDefaultSyloOwlOffset = Offset(-0.2, -0.77);
 const Offset kDefaultSyloBrandTextOffset = Offset(0.6, -0.52);
-const double kDefaultCardVerticalFactor = 0.70;
+const double kDefaultCardVerticalFactor = 0.78;
 
 // --- 1. Message Model ---
 class ChatMessage {
   final String text;
   final bool isUser;
   ChatMessage({required this.text, required this.isUser});
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    return ChatMessage(
+      text: json['text'] as String? ?? '',
+      isUser: json['isUser'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'text': text,
+      'isUser': isUser,
+    };
+  }
 }
 
 // --- 2. Trigger Function (Using Smooth Dialog) ---
@@ -57,10 +73,17 @@ class SyloChatOverlay extends StatefulWidget {
 }
 
 class _SyloChatOverlayState extends State<SyloChatOverlay> {
+  static const String _chatHistoryPrefsKey = 'sylo_chat_history';
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   bool _isTyping = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
 
   @override
   void dispose() {
@@ -101,16 +124,87 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
     );
   }
 
+  Future<void> _loadHistory() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final String? stored = prefs.getString(_chatHistoryPrefsKey);
+
+      if (stored == null || stored.isEmpty) {
+        return;
+      }
+
+      final List<dynamic> decoded = jsonDecode(stored) as List<dynamic>;
+      final List<ChatMessage> history = decoded
+          .whereType<Map>()
+          .map(
+            (item) => ChatMessage.fromJson(
+              Map<String, dynamic>.from(item),
+            ),
+          )
+          .toList();
+
+      if (history.isEmpty) {
+        return;
+      }
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _messages.addAll(history);
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    } catch (e) {
+      debugPrint('SyloChatOverlay: Failed to load history -> $e');
+    }
+  }
+
+  Future<void> _persistMessages() async {
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      final List<Map<String, dynamic>> payload =
+          _messages.map((m) => m.toJson()).toList();
+      await prefs.setString(_chatHistoryPrefsKey, jsonEncode(payload));
+    } catch (e) {
+      debugPrint('SyloChatOverlay: Failed to persist history -> $e');
+    }
+  }
+
+  void _addMessage(ChatMessage message) {
+    setState(() {
+      _messages.add(message);
+    });
+    unawaited(_persistMessages());
+    _scrollToBottom();
+  }
+
+  Future<void> _resetConversation() async {
+    setState(() {
+      _messages.clear();
+      _isTyping = false;
+    });
+
+    try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_chatHistoryPrefsKey);
+    } catch (e) {
+      debugPrint('SyloChatOverlay: Failed to clear history -> $e');
+    }
+
+    _scrollToBottom();
+  }
+
   Future<void> _handleSubmitted(String text) async {
     if (text.trim().isEmpty) return;
 
     _textController.clear();
 
+    _addMessage(ChatMessage(text: text, isUser: true));
     setState(() {
-      _messages.add(ChatMessage(text: text, isUser: true));
       _isTyping = true;
     });
-    _scrollToBottom();
 
     // Trigger Streak Logic
     _checkStreak();
@@ -122,15 +216,14 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
       if (mounted) {
         setState(() {
           _isTyping = false;
-          _messages.add(
-            ChatMessage(
-              text:
-                  'GROK_KEY is missing. Restart the app with --dart-define=GROK_KEY=your_grok_key.',
-              isUser: false,
-            ),
-          );
         });
-        _scrollToBottom();
+        _addMessage(
+          ChatMessage(
+            text:
+                'GROK_KEY is missing. Restart the app with --dart-define=GROK_KEY=your_grok_key.',
+            isUser: false,
+          ),
+        );
       }
       return;
     }
@@ -166,33 +259,27 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
         final data = jsonDecode(response.body);
         final String botReply = data['choices'][0]['message']['content'];
 
-        setState(() {
-          _messages.add(ChatMessage(text: botReply.trim(), isUser: false));
-        });
+        _addMessage(ChatMessage(text: botReply.trim(), isUser: false));
       } else {
         debugPrint("OpenRouter Error: ${response.body}");
-        setState(() {
-          _messages.add(
-            ChatMessage(
-              text: "My feathers are ruffled! (Error: ${response.statusCode})",
-              isUser: false,
-            ),
-          );
-        });
+        _addMessage(
+          ChatMessage(
+            text: "My feathers are ruffled! (Error: ${response.statusCode})",
+            isUser: false,
+          ),
+        );
       }
     } catch (e) {
       debugPrint("Sylo Exception: $e");
       if (mounted) {
-        setState(() {
-          _messages.add(
-            ChatMessage(text: "I couldn't reach the cloud.", isUser: false),
-          );
-        });
+        _addMessage(
+          ChatMessage(text: "I couldn't reach the cloud.", isUser: false),
+        );
       }
     } finally {
       if (mounted) {
         setState(() => _isTyping = false);
-        _scrollToBottom();
+        unawaited(_persistMessages());
       }
     }
   }
@@ -239,7 +326,7 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
                     left: cardLeft,
                     child: Container(
                       width: cardWidth,
-                      height: 450,
+                      height: 420,
                       padding: const EdgeInsets.fromLTRB(24, 32, 24, 20),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF8EFDC),
@@ -257,13 +344,19 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
                           // Close Button
                           Align(
                             alignment: Alignment.topRight,
-                            child: IconButton(
-                              icon: const Icon(
-                                Icons.close,
-                                color: Color(0xFF776E67),
+                            child: Transform.translate(
+                              offset: const Offset(18, -26),
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.refresh,
+                                  color: Color(0xFF776E67),
+                                ),
+                                splashRadius: 20,
+                                tooltip: 'Start new chat',
+                                onPressed: _messages.isEmpty && !_isTyping
+                                    ? null
+                                    : () => _resetConversation(),
                               ),
-                              splashRadius: 20,
-                              onPressed: () => Navigator.of(context).pop(),
                             ),
                           ),
                           const SizedBox(height: 10),
