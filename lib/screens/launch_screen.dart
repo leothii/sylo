@@ -1,8 +1,45 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Needed for Auth check
 import 'login_page.dart';
+import 'home_page.dart'; // Needed for navigation
 
-class LaunchScreen extends StatelessWidget {
+class LaunchScreen extends StatefulWidget {
   const LaunchScreen({super.key});
+
+  @override
+  State<LaunchScreen> createState() => _LaunchScreenState();
+}
+
+class _LaunchScreenState extends State<LaunchScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Start the check immediately
+    _navigateToNextScreen();
+  }
+
+  void _navigateToNextScreen() {
+    // 1. Wait 3 seconds for the animation/branding
+    Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
+
+      // 2. Check if user is logged in
+      final User? user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        // User is logged in -> Go Home (Streak will be preserved!)
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      } else {
+        // User is NOT logged in -> Go to Login
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +88,8 @@ class LaunchScreen extends StatelessWidget {
                             color: const Color(0xFF000000)
                                 .withValues(alpha: 0.25),
                           )
+                            color: const Color(0xFF000000).withOpacity(0.25),
+                          ),
                         ],
                       ),
                     ),
@@ -68,6 +107,8 @@ class LaunchScreen extends StatelessWidget {
                             color: const Color(0xFF000000)
                                 .withValues(alpha: 0.25),
                           )
+                            color: const Color(0xFF000000).withOpacity(0.25),
+                          ),
                         ],
                       ),
                     ),
@@ -77,13 +118,14 @@ class LaunchScreen extends StatelessWidget {
 
               const SizedBox(height: 0),
 
-              // Owl with Start Button Stack
+              // Owl with Start Button Stack (Visual Only now, logic handled by Timer)
               SizedBox(
                 height: 273,
                 child: Stack(
                   clipBehavior: Clip.none,
                   alignment: Alignment.center,
                   children: [
+                    // START BUTTON (Visual placeholder, since timer auto-navigates)
                     Positioned(
                       bottom: 40,
                       child: Container(
@@ -100,34 +142,23 @@ class LaunchScreen extends StatelessWidget {
                               blurRadius: 4,
                               offset: Offset(0, 4),
                               spreadRadius: 0,
-                            )
+                            ),
                           ],
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () => Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const LoginPage(),
-                              ),
-                            ),
-                            borderRadius: BorderRadius.circular(10),
-                            child: const Center(
-                              child: Text(
-                                'start',
-                                style: TextStyle(
-                                  color: Color(0xFF882124),
-                                  fontSize: 22,
-                                  fontFamily: 'Quicksand',
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
+                        child: const Center(
+                          child: Text(
+                            'start',
+                            style: TextStyle(
+                              color: Color(0xFF882124),
+                              fontSize: 22,
+                              fontFamily: 'Quicksand',
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ),
                       ),
                     ),
+                    // OWL IMAGE
                     Positioned(
                       top: -20,
                       left: 0,
@@ -155,11 +186,7 @@ class LaunchScreen extends StatelessWidget {
               const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.headset,
-                    color: Color(0xFFF1F1F1),
-                    size: 30,
-                  ),
+                  Icon(Icons.headset, color: Color(0xFFF1F1F1), size: 30),
                   SizedBox(width: 40),
                   Icon(
                     Icons.lightbulb_outline,
@@ -167,11 +194,7 @@ class LaunchScreen extends StatelessWidget {
                     size: 30,
                   ),
                   SizedBox(width: 40),
-                  Icon(
-                    Icons.assignment,
-                    color: Color(0xFFF1F1F1),
-                    size: 30,
-                  ),
+                  Icon(Icons.assignment, color: Color(0xFFF1F1F1), size: 30),
                 ],
               ),
 

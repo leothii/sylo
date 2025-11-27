@@ -1,33 +1,61 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart'; // For debugPrint
 import 'package:shared_preferences/shared_preferences.dart';
 
 class StreakService {
-  static const String _keyStreakCount = 'sylo_streak_count';
-  static const String _keyLastDate = 'sylo_last_streak_date';
-  static const String _keyActiveDates = 'sylo_active_dates_list';
+  // --- HELPER: Get Current User ID ---
+  static String _getUserId() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      debugPrint("⚠️ StreakService: No user logged in. Using 'guest'.");
+      return 'guest';
+    }
+    debugPrint("✅ StreakService: Active User: ${user.uid}");
+    return user.uid;
+  }
 
-  // Updates the streak when a user chats
+  // --- KEYS (Now functions to always get the latest UID) ---
+  static String _keyStreakCount() => 'sylo_streak_count_${_getUserId()}';
+  static String _keyLastDate() => 'sylo_last_streak_date_${_getUserId()}';
+  static String _keyActiveDates() => 'sylo_active_dates_list_${_getUserId()}';
+
+  // --- UPDATE LOGIC ---
   static Future<bool> updateStreak() async {
     final prefs = await SharedPreferences.getInstance();
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    final lastDateStr = prefs.getString(_keyLastDate);
-    int currentStreak = prefs.getInt(_keyStreakCount) ?? 0;
-    List<String> activeDates = prefs.getStringList(_keyActiveDates) ?? [];
+    final keyDate = _keyLastDate();
+    final keyCount = _keyStreakCount();
+    final keyDates = _keyActiveDates();
 
+    final lastDateStr = prefs.getString(keyDate);
+    int currentStreak = prefs.getInt(keyCount) ?? 0;
+    List<String> activeDates = prefs.getStringList(keyDates) ?? [];
+
+    // 1. First time ever
     if (lastDateStr == null) {
+      debugPrint("🔥 Streak started! (1 Day)");
       await _saveData(prefs, 1, today, activeDates);
       return true;
     }
 
     final lastDate = DateTime.parse(lastDateStr);
 
+    // 2. Already chatted today
     if (today.isAtSameMomentAs(lastDate)) {
+      debugPrint("🔥 Already chatted today. Streak: $currentStreak");
       return false;
-    } else if (today.difference(lastDate).inDays == 1) {
+    }
+    // 3. Chatted yesterday (Increment)
+    else if (today.difference(lastDate).inDays == 1) {
+      debugPrint("🔥 Streak incremented! (${currentStreak + 1} Days)");
       await _saveData(prefs, currentStreak + 1, today, activeDates);
       return true;
-    } else {
+    }
+    // 4. Broken streak (Reset)
+    else {
+      debugPrint("💔 Streak broken. Reset to 1.");
       await _saveData(prefs, 1, today, activeDates);
       return true;
     }
@@ -43,26 +71,29 @@ class StreakService {
     if (!activeDates.contains(todayStr)) {
       activeDates.add(todayStr);
     }
+    // Cleanup old dates
     activeDates.removeWhere((date) {
       final d = DateTime.parse(date);
       return today.difference(d).inDays > 7;
     });
 
-    await prefs.setInt(_keyStreakCount, streak);
-    await prefs.setString(_keyLastDate, todayStr);
-    await prefs.setStringList(_keyActiveDates, activeDates);
+    await prefs.setInt(_keyStreakCount(), streak);
+    await prefs.setString(_keyLastDate(), todayStr);
+    await prefs.setStringList(_keyActiveDates(), activeDates);
   }
 
-  // Returns the total streak count
+  // --- GETTERS ---
+
   static Future<int> getStreakCount() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_keyStreakCount) ?? 0;
+    final count = prefs.getInt(_keyStreakCount()) ?? 0;
+    debugPrint("📊 Loaded Streak Count: $count for ${_getUserId()}");
+    return count;
   }
 
-  // Returns the active days for the weekly dots
   static Future<Set<int>> getActiveWeekdays() async {
     final prefs = await SharedPreferences.getInstance();
-    final activeStrings = prefs.getStringList(_keyActiveDates) ?? [];
+    final activeStrings = prefs.getStringList(_keyActiveDates()) ?? [];
     final Set<int> activeWeekdays = {};
     final now = DateTime.now();
 
@@ -75,11 +106,9 @@ class StreakService {
     return activeWeekdays;
   }
 
-  // --- NEW METHOD ADDED HERE ---
-  /// Returns true if the user has already chatted TODAY.
   static Future<bool> hasChattedToday() async {
     final prefs = await SharedPreferences.getInstance();
-    final lastDateStr = prefs.getString(_keyLastDate);
+    final lastDateStr = prefs.getString(_keyLastDate());
     if (lastDateStr == null) return false;
 
     final now = DateTime.now();

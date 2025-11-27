@@ -4,18 +4,19 @@ import 'dart:typed_data';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // For auth state listener
 
 import '../utils/app_colors.dart';
 import '../utils/streak_service.dart';
 import '../models/attachment_payload.dart';
 import '../models/study_material.dart';
 import '../services/gemini_file_service.dart';
+import '../utils/streak_service.dart'; // Streak Service
+import '../utils/smooth_page.dart'; // Smooth Page Route
 import '../widgets/audio_card.dart';
 import '../widgets/sylo_chat_overlay.dart';
-import '../widgets/streak_overlay.dart'; // Required for the popup
-import '../utils/smooth_page.dart';
-import '../widgets/icon_badge.dart';
-import '../widgets/sound_toggle_button.dart';
+import '../widgets/streak_overlay.dart'; // Streak Overlay
+
 import 'settings_overlay.dart';
 import 'summary_page.dart';
 import 'notes_page.dart';
@@ -38,16 +39,24 @@ class _HomePageState extends State<HomePage> {
   String? _attachmentError;
   int _attachmentUploadToken = 0;
 
+  // Streak State
   int _streakCount = 0;
   bool _hasChattedToday = false;
 
   @override
   void initState() {
     super.initState();
-    _loadStreakData();
+
+    // Listen for Auth changes to load correct user data
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user != null && mounted) {
+        _loadStreakData();
+      }
+    });
+
+    _loadStreakData(); // Initial load
   }
 
-  // Fetch data from storage
   Future<void> _loadStreakData() async {
     final count = await StreakService.getStreakCount();
     final hasChatted = await StreakService.hasChattedToday();
@@ -60,30 +69,22 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Helper to handle Analyze button streak logic
+  // Helper to trigger streak update (e.g. when clicking Analyze)
   Future<void> _triggerStreakUpdate() async {
     bool streakUpdated = await StreakService.updateStreak();
 
     if (streakUpdated && mounted) {
-      await _showStreakOverlay();
-    }
-  }
+      int newCount = await StreakService.getStreakCount();
+      Set<int> activeDays = await StreakService.getActiveWeekdays();
 
-  Future<void> _showStreakOverlay() async {
-    final int newCount = await StreakService.getStreakCount();
-    final Set<int> activeDays = await StreakService.getActiveWeekdays();
+      // Show the overlay smoothly
+      await showSmoothDialog(
+        context: context,
+        builder: (_) =>
+            StreakOverlay(currentStreak: newCount, activeWeekdays: activeDays),
+      );
 
-    if (!mounted) {
-      return;
-    }
-
-    await showSmoothDialog(
-      context: context,
-      builder: (_) =>
-          StreakOverlay(currentStreak: newCount, activeWeekdays: activeDays),
-    );
-
-    if (mounted) {
+      // Refresh UI immediately
       _loadStreakData();
     }
   }
@@ -134,7 +135,7 @@ class _HomePageState extends State<HomePage> {
     showDialog(
       context: context,
       builder: (context) => const SettingsOverlay(),
-    ).then((_) => _loadStreakData()); // Refresh in case reset button was used
+    ).then((_) => _loadStreakData()); // Refresh on return
   }
 
   Widget _buildTopBar() {
@@ -147,7 +148,7 @@ class _HomePageState extends State<HomePage> {
       children: [
         Column(
           children: [
-            IconBadge(
+            _IconBadge(
               assetPath: 'assets/icons/profile.png',
               size: 30,
               onTap: () {
@@ -157,7 +158,7 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             const SizedBox(height: 18),
-            IconBadge(
+            _IconBadge(
               assetPath: 'assets/icons/note.png',
               size: 30,
               onTap: () {
@@ -185,33 +186,44 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Icon(
                   Icons.local_fire_department_rounded,
+        Container(
+          margin: const EdgeInsets.only(right: 12, top: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.local_fire_department_rounded,
+                color: flameColor,
+                size: 20,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$_streakCount',
+                style: TextStyle(
+                  fontFamily: 'Bungee',
+                  fontSize: 16,
                   color: flameColor,
-                  size: 20,
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  '$_streakCount',
-                  style: TextStyle(
-                    fontFamily: 'Bungee',
-                    fontSize: 16,
-                    color: flameColor,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
 
         // -----------------------
         Column(
           children: [
-            IconBadge(
+            _IconBadge(
               assetPath: 'assets/icons/settings.png',
               size: 30,
               onTap: _openSettingsOverlay,
             ),
             const SizedBox(height: 18),
-            SoundToggleButton(size: 30),
+            _IconBadge(assetPath: 'assets/icons/sound.png', size: 30),
           ],
         ),
       ],
@@ -410,8 +422,7 @@ class _HomePageState extends State<HomePage> {
             child: GestureDetector(
               onTap: () async {
                 await showSyloChatOverlay(context);
-                // Refresh flame after chat closes
-                _loadStreakData();
+                _loadStreakData(); // Refresh flame on return
               },
               child: Image.asset(
                 'assets/images/sylo.png',
@@ -444,6 +455,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   // --- REFRESH FIX HERE ---
+  // --- REFRESH & STREAK LOGIC ---
   void _openSummary() async {
     final String rawText = _interestController.text.trim();
     final StudyMaterial material = StudyMaterial(
@@ -480,6 +492,7 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
+    // Trigger Streak Update Here!
     await _triggerStreakUpdate();
 
     if (!mounted) {
@@ -501,7 +514,7 @@ class _HomePageState extends State<HomePage> {
         .then((_) => _loadStreakData()); // Refresh when returning
   }
 
-  // --- REFRESH FIX HERE ---
+  // --- REFRESH LOGIC ---
   void _openQuiz() {
     final String rawText = _interestController.text.trim();
     final StudyMaterial material = StudyMaterial(
@@ -845,7 +858,9 @@ class _ActionButton extends StatelessWidget {
         ],
       ),
     );
+
     if (onTap == null) return buttonContent;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -857,3 +872,35 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
+class _IconBadge extends StatelessWidget {
+  const _IconBadge({required this.assetPath, this.size = 44, this.onTap});
+  final String assetPath;
+  final double size;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final image = Image.asset(
+      assetPath,
+      width: size,
+      height: size,
+      fit: BoxFit.contain,
+    );
+    if (onTap == null) {
+      return SizedBox(
+        height: size,
+        width: size,
+        child: Center(child: image),
+      );
+    }
+    return SizedBox(
+      height: size,
+      width: size,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.translucent,
+        child: Center(child: image),
+      ),
+    );
+  }
+}
