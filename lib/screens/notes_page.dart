@@ -66,7 +66,7 @@ class _NotesPageState extends State<NotesPage> {
                       SmoothPageRoute(builder: (_) => const ProfilePage()),
                     ); // <--- Smooth
                   },
-                  child: const Icon(Icons.person, color: _colNavItem, size: 32),
+                  child: Image.asset('assets/icons/profile.png', width: 32, height: 32),
                 ),
 
                 // 2. Home Icon -> Navigates back to HomePage
@@ -79,7 +79,7 @@ class _NotesPageState extends State<NotesPage> {
                       (route) => false,
                     );
                   },
-                  child: const Icon(Icons.home, color: _colNavItem, size: 32),
+                  child: Image.asset('assets/icons/home.png', width: 32, height: 32),
                 ),
 
                 // 3. Music Icon -> Navigates to MusicPage
@@ -89,7 +89,7 @@ class _NotesPageState extends State<NotesPage> {
                       SmoothPageRoute(builder: (_) => const MusicPage()),
                     ); // <--- Smooth
                   },
-                  child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+                  child: Image.asset('assets/icons/headphone.png', width: 32, height: 32),
                 ),
               ],
             ),

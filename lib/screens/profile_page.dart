@@ -94,7 +94,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.person, color: _colNavItem, size: 32),
+                  child: Image.asset('assets/icons/user.png', width: 32, height: 32),
                 ),
 
                 // 2. Home Icon -> Navigates back to HomePage
@@ -107,7 +107,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       (route) => false,
                     );
                   },
-                  child: const Icon(Icons.home, color: _colNavItem, size: 32),
+                  child: Image.asset('assets/icons/home.png', width: 32, height: 32),
                 ),
 
                 // 3. Music Icon -> Navigates to MusicPage
@@ -119,7 +119,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                     );
                   },
-                  child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+                  child: Image.asset('assets/icons/headphone.png', width: 32, height: 32),
                 ),
               ],
             ),
@@ -240,79 +240,74 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       const SizedBox(height: 40),
 
-                      // Save Button
-                      GestureDetector(
-                        onTap: _isSavingProfile ? null : _saveProfile,
-                        child: Container(
-                          width: 120,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            color: _colBtnRed,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x3F000000),
-                                blurRadius: 4,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: _isSavingProfile
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(_colTitleGold),
+                      // Save Button (proportionate to text)
+                      Center(
+                        child: GestureDetector(
+                          onTap: _isSavingProfile ? null : _saveProfile,
+                          child: Container(
+                            width: 80,
+                            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+                            decoration: BoxDecoration(
+                              color: _colBtnRed,
+                              borderRadius: BorderRadius.circular(10),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x3F000000),
+                                  blurRadius: 4,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: _isSavingProfile
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.0,
+                                        valueColor: AlwaysStoppedAnimation<Color>(_colTitleGold),
+                                      ),
+                                    )
+                                  : const Text(
+                                      'save',
+                                      style: TextStyle(
+                                        color: _colTitleGold,
+                                        fontSize: 16,
+                                        fontFamily: 'Quicksand',
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                     ),
-                                  )
-                                : const Text(
-                                    'save changes',
-                                    style: TextStyle(
-                                      color: _colTitleGold,
-                                      fontSize: 20,
-                                      fontFamily: 'Quicksand',
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
+                            ),
                           ),
                         ),
                       ),
 
                       const SizedBox(height: 32),
 
-                      GestureDetector(
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) => const LogoutOverlay(),
-                          );
-                        },
-                        child: Container(
-                          width: 140,
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            color: _colBtnRed,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x3F000000),
-                                blurRadius: 4,
-                                offset: Offset(0, 4),
+                      // Logout with text, centered
+                      Center(
+                        child: GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) => const LogoutOverlay(),
+                            );
+                          },
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.logout, color: _colBtnRed, size: 24),
+                              const SizedBox(width: 8),
+                              Text(
+                                'logout',
+                                style: TextStyle(
+                                  color: _colBtnRed,
+                                  fontSize: 16,
+                                  fontFamily: 'Quicksand',
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ],
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'log out',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontFamily: 'Quicksand',
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
                           ),
                         ),
                       ),

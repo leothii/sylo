@@ -58,7 +58,8 @@ class AboutPage extends StatelessWidget {
                   // BODY TEXT
                   // Transcribed from your image
                   const Text(
-                    'Lorem ipsum dolor sit amet. Est laborum voluptatem quo laudantium nisi et suscipit animi et laudantium amet eum omnis tenetur ut animi quia? Est recusandae obcaecati ab provident numquam eum impedit iusto aut rerum ducimus. Qui dolorum repellat et temporibus laboriosam cum laborum numquam 33 obcaecati itaque qui esse officia et aliquid eius ut voluptates animi. Est culpa ratione in modi voluptatem aut quia impedit et nihil modi et cumque nulla.',
+                    'Sylo is an innovative educational app designed to revolutionize the way you learn and study. Powered by advanced AI, Sylo helps you create concise summaries from any material, generate interactive quizzes to test your knowledge, and organize personalized notes for better retention.\n\n'
+                    'Whether you\'re a student preparing for exams or a lifelong learner, Sylo adapts to your needs, making education engaging, efficient, and enjoyable.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white,

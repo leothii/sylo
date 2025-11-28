@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../utils/env.dart'; // <--- Back to your original Env class
 import '../utils/streak_service.dart';
@@ -73,11 +74,16 @@ class SyloChatOverlay extends StatefulWidget {
 }
 
 class _SyloChatOverlayState extends State<SyloChatOverlay> {
-  static const String _chatHistoryPrefsKey = 'sylo_chat_history';
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   bool _isTyping = false;
+  String? _lastUserId;
+
+  String get _chatHistoryPrefsKey {
+    final String uid = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
+    return 'sylo_chat_history.$uid';
+  }
 
   @override
   void initState() {
@@ -126,6 +132,13 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
 
   Future<void> _loadHistory() async {
     try {
+      final String currentUserId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
+      if (_lastUserId != null && _lastUserId != currentUserId) {
+        // different user logged in, clear in-memory messages
+        _messages.clear();
+      }
+      _lastUserId = currentUserId;
+
       final SharedPreferences prefs = await SharedPreferences.getInstance();
       final String? stored = prefs.getString(_chatHistoryPrefsKey);
 
@@ -352,10 +365,29 @@ class _SyloChatOverlayState extends State<SyloChatOverlay> {
                                   color: Color(0xFF776E67),
                                 ),
                                 splashRadius: 20,
-                                tooltip: 'Start new chat',
-                                onPressed: _messages.isEmpty && !_isTyping
-                                    ? null
-                                    : () => _resetConversation(),
+                                tooltip: 'Clear chat history',
+                                onPressed: () async {
+                                  final bool? confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (BuildContext context) => AlertDialog(
+                                      title: const Text('Clear Chat History'),
+                                      content: const Text('Are you sure you want to clear all chat messages? This action cannot be undone.'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.of(context).pop(false),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => Navigator.of(context).pop(true),
+                                          child: const Text('Clear'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm == true) {
+                                    await _resetConversation();
+                                  }
+                                },
                               ),
                             ),
                           ),

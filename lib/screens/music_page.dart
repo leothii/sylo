@@ -158,7 +158,7 @@ class _MusicPageState extends State<MusicPage> {
                         ), // <--- Smooth
                       );
                     },
-                    child: const Icon(Icons.person, color: _colNavItem, size: 32),
+                    child: Image.asset('assets/icons/profile.png', width: 32, height: 32),
                   ),
   
                   // 2. Home Icon -> Navigates back to HomePage
@@ -171,7 +171,7 @@ class _MusicPageState extends State<MusicPage> {
                         (route) => false,
                       );
                     },
-                    child: const Icon(Icons.home, color: _colNavItem, size: 32),
+                    child: Image.asset('assets/icons/home.png', width: 32, height: 32),
                   ),
   
                   // 3. Headphones Icon (ACTIVE) -> Has Blue Indicator
@@ -189,7 +189,7 @@ class _MusicPageState extends State<MusicPage> {
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+                    child: Image.asset('assets/icons/headphone.png', width: 24, height: 24),
                   ),
                 ],
               ),

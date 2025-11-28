@@ -288,7 +288,7 @@ class _QuizPageState extends State<QuizPage> {
                         SmoothPageRoute(builder: (_) => const ProfilePage()),
                       );
                     },
-                    child: const Icon(Icons.person, color: _colNavItem, size: 32),
+                    child: Image.asset('assets/icons/profile.png', width: 32, height: 32),
                   ),
 
                   GestureDetector(
@@ -300,7 +300,7 @@ class _QuizPageState extends State<QuizPage> {
                         (route) => false,
                       );
                     },
-                    child: const Icon(Icons.home, color: _colNavItem, size: 32),
+                    child: Image.asset('assets/icons/home.png', width: 32, height: 32),
                   ),
 
                   GestureDetector(
@@ -309,7 +309,7 @@ class _QuizPageState extends State<QuizPage> {
                         SmoothPageRoute(builder: (_) => const MusicPage()),
                       );
                     },
-                    child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+                    child: Image.asset('assets/icons/headphone.png', width: 32, height: 32),
                   ),
                 ],
               ),
