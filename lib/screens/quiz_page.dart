@@ -218,8 +218,9 @@ class _QuizPageState extends State<QuizPage> {
 
     try {
       final List<GeminiFileAttachment> uploadedAttachments =
-          await GeminiFileService.instance
-              .uploadAll(widget.material.attachments);
+          await GeminiFileService.instance.uploadAll(
+            widget.material.attachments,
+          );
 
       final PreparedStudyMaterial prepared = PreparedStudyMaterial(
         text: widget.material.text,
@@ -247,8 +248,9 @@ class _QuizPageState extends State<QuizPage> {
 
     try {
       final PreparedStudyMaterial prepared = await _ensurePreparedMaterial();
-      final List<QuizQuestion> questions =
-          await _aiService.generateQuiz(prepared);
+      final List<QuizQuestion> questions = await _aiService.generateQuiz(
+        prepared,
+      );
       if (!mounted) return;
       setState(() {
         _questions = questions;
@@ -272,50 +274,52 @@ class _QuizPageState extends State<QuizPage> {
       backgroundColor: _colBackgroundBlue,
 
       // --- BOTTOM NAV ---
-        bottomNavigationBar: ColoredBox(
-          color: _colBackgroundBlue,
-          child: SafeArea(
-            top: false,
-            minimum: const EdgeInsets.symmetric(horizontal: 12),
-            child: SizedBox(
-              height: 80,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        SmoothPageRoute(builder: (_) => const ProfilePage()),
-                      );
-                    },
-                    child: const Icon(Icons.person, color: _colNavItem, size: 32),
-                  ),
+      bottomNavigationBar: ColoredBox(
+        color: _colBackgroundBlue,
+        child: SafeArea(
+          top: false,
+          minimum: const EdgeInsets.symmetric(horizontal: 12),
+          child: SizedBox(
+            height: 80,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      SmoothPageRoute(builder: (_) => const ProfilePage()),
+                    );
+                  },
+                  child: const Icon(Icons.person, color: _colNavItem, size: 32),
+                ),
 
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pushAndRemoveUntil(
-                        SmoothPageRoute(
-                          builder: (_) => const HomePage(),
-                        ),
-                        (route) => false,
-                      );
-                    },
-                    child: const Icon(Icons.home, color: _colNavItem, size: 32),
-                  ),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      SmoothPageRoute(builder: (_) => const HomePage()),
+                      (route) => false,
+                    );
+                  },
+                  child: const Icon(Icons.home, color: _colNavItem, size: 32),
+                ),
 
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).push(
-                        SmoothPageRoute(builder: (_) => const MusicPage()),
-                      );
-                    },
-                    child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(
+                      context,
+                    ).push(SmoothPageRoute(builder: (_) => const MusicPage()));
+                  },
+                  child: const Icon(
+                    Icons.headphones,
+                    color: _colNavItem,
+                    size: 32,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
+      ),
 
       body: SafeArea(
         child: Stack(
@@ -359,7 +363,8 @@ class _QuizPageState extends State<QuizPage> {
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: GestureDetector(
-                                    onTap: () => Navigator.of(context).maybePop(),
+                                    onTap: () =>
+                                        Navigator.of(context).maybePop(),
                                     child: const Icon(
                                       Icons.close,
                                       color: _colTextGrey,
@@ -408,12 +413,8 @@ class _QuizPageState extends State<QuizPage> {
                                     _isSubmitting = true;
                                   });
 
-                                  // ------------------------------------------
-                                  // 1. TRIGGER STREAK (New Logic)
-                                  // ------------------------------------------
                                   await _triggerStreakUpdate();
 
-                                  // 2. Calculate Score
                                   final int total = _questions.length;
                                   final int correct = _questions
                                       .asMap()
@@ -438,7 +439,7 @@ class _QuizPageState extends State<QuizPage> {
                                   try {
                                     final PreparedStudyMaterial prepared =
                                         _preparedMaterial ??
-                                            await _ensurePreparedMaterial();
+                                        await _ensurePreparedMaterial();
                                     final QuizResultsSummary summary =
                                         await _aiService.buildQuizSummary(
                                           material: prepared,

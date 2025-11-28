@@ -39,7 +39,6 @@ class _LoginPageState extends State<LoginPage> {
       body: SafeArea(
         child: Stack(
           children: [
-            // --- LOGO / OWL (Unchanged) ---
             Positioned(
               left: 0,
               right: 0,
@@ -130,7 +129,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
 
-            // --- NAME FIELD (Unchanged) ---
             Positioned(
               left: 108,
               top: 403,
@@ -170,7 +168,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
 
-            // --- PASSWORD FIELD (Unchanged) ---
             Positioned(
               left: 108,
               top: 462,
@@ -210,7 +207,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
 
-            // --- *** MODIFIED: FORGOT PASSWORD TEXT *** ---
             Positioned(
               left: 108,
               top: 495,
@@ -239,7 +235,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
 
-            // --- CONTINUE BUTTON (Unchanged) ---
             Positioned(
               left: 126,
               top: 544,
@@ -292,7 +287,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
 
-            // --- "OR" TEXT (Unchanged) ---
             Positioned(
               top: 590,
               left: 126,
@@ -310,7 +304,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
 
-            // --- "SIGN UP" BUTTON (Unchanged) ---
             Positioned(
               left: 126,
               top: 618,

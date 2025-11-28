@@ -101,9 +101,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 GestureDetector(
                   onTap: () {
                     Navigator.of(context).pushAndRemoveUntil(
-                      SmoothPageRoute(
-                        builder: (_) => const HomePage(),
-                      ),
+                      SmoothPageRoute(builder: (_) => const HomePage()),
                       (route) => false,
                     );
                   },
@@ -114,12 +112,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 GestureDetector(
                   onTap: () {
                     Navigator.of(context).pushReplacement(
-                      SmoothPageRoute(
-                        builder: (_) => const MusicPage(),
-                      ),
+                      SmoothPageRoute(builder: (_) => const MusicPage()),
                     );
                   },
-                  child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+                  child: const Icon(
+                    Icons.headphones,
+                    color: _colNavItem,
+                    size: 32,
+                  ),
                 ),
               ],
             ),
@@ -202,7 +202,11 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.email_outlined, color: _colIconGrey, size: 22),
+                              const Icon(
+                                Icons.email_outlined,
+                                color: _colIconGrey,
+                                size: 22,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
@@ -264,7 +268,9 @@ class _ProfilePageState extends State<ProfilePage> {
                                     height: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(_colTitleGold),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        _colTitleGold,
+                                      ),
                                     ),
                                   )
                                 : const Text(
@@ -286,7 +292,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         onTap: () {
                           showDialog(
                             context: context,
-                            builder: (BuildContext context) => const LogoutOverlay(),
+                            builder: (BuildContext context) =>
+                                const LogoutOverlay(),
                           );
                         },
                         child: Container(

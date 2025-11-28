@@ -1,13 +1,10 @@
-// lib/screens/score_page.dart
-
 import 'package:flutter/material.dart';
 import 'settings_overlay.dart';
 
-// --- NEW IMPORTS ---
 import 'music_page.dart';
 import 'profile_page.dart';
 import 'home_page.dart';
-import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute
+import '../utils/smooth_page.dart';
 import '../services/ai_service.dart';
 
 class ScorePage extends StatefulWidget {
@@ -110,11 +107,15 @@ class _ScorePageState extends State<ScorePage> {
                 // 3. Music Icon -> Navigates to MusicPage
                 GestureDetector(
                   onTap: () {
-                    Navigator.of(context).push(
-                      SmoothPageRoute(builder: (_) => const MusicPage()),
-                    ); // <--- Smooth
+                    Navigator.of(
+                      context,
+                    ).push(SmoothPageRoute(builder: (_) => const MusicPage()));
                   },
-                  child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
+                  child: const Icon(
+                    Icons.headphones,
+                    color: _colNavItem,
+                    size: 32,
+                  ),
                 ),
               ],
             ),
@@ -433,8 +434,7 @@ class _ScorePageState extends State<ScorePage> {
                       itemBuilder: (BuildContext context, int index) {
                         final QuizQuestion question = _questions[index];
                         final int? selectedIndex = _selections[index];
-                        final int? correctIndex =
-                            question.correctOptionIndex;
+                        final int? correctIndex = question.correctOptionIndex;
                         final bool isCorrect =
                             selectedIndex != null &&
                             correctIndex != null &&
@@ -451,8 +451,7 @@ class _ScorePageState extends State<ScorePage> {
                           return question.options[optionIndex];
                         }
 
-                        final String selectedLabel =
-                          optionLabel(selectedIndex);
+                        final String selectedLabel = optionLabel(selectedIndex);
                         final String correctLabel = optionLabel(correctIndex);
 
                         return Container(

@@ -1,10 +1,8 @@
-// lib/main.dart
-
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'screens/launch_screen.dart'; // Points to the "Bouncer" screen
+import 'screens/launch_screen.dart';
 import 'services/sound_service.dart';
 import 'utils/app_colors.dart';
 
@@ -41,7 +39,6 @@ class SyloApp extends StatelessWidget {
     return MaterialApp(
       title: 'Sylo: The Academic AI Companion',
 
-      // Removes the "DEBUG" ribbon from the top right corner
       debugShowCheckedModeBanner: false,
 
       theme: ThemeData(
@@ -51,8 +48,6 @@ class SyloApp extends StatelessWidget {
         useMaterial3: true,
       ),
 
-      // 4. Start at LaunchScreen
-      // It acts as the "Bouncer": Waits 3s -> Checks User -> Sends to Home or Login
       home: const LaunchScreen(),
     );
   }

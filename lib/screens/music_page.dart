@@ -1,5 +1,3 @@
-// lib/screens/music_page.dart
-
 import 'dart:async';
 
 import 'package:file_picker/file_picker.dart';
@@ -13,7 +11,7 @@ import '../widgets/icon_badge.dart';
 import '../widgets/sound_toggle_button.dart';
 import '../widgets/spotify_api.dart';
 import '../utils/audio_player_service.dart';
-import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute
+import '../utils/smooth_page.dart'; //
 import '../services/spotify_service.dart';
 import '../utils/env.dart';
 import 'profile_page.dart';
@@ -139,68 +137,64 @@ class _MusicPageState extends State<MusicPage> {
     return Scaffold(
       backgroundColor: _colBackgroundBlue,
       // Bottom Navigation Bar
-        bottomNavigationBar: ColoredBox(
-          color: _colBackgroundBlue,
-          child: SafeArea(
-            top: false,
-            minimum: const EdgeInsets.symmetric(horizontal: 12),
-            child: SizedBox(
-              height: 80,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  // 1. Profile Icon -> Navigates to ProfilePage
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pushReplacement(
-                        SmoothPageRoute(
-                          builder: (_) => const ProfilePage(),
-                        ), // <--- Smooth
-                      );
-                    },
-                    child: const Icon(Icons.person, color: _colNavItem, size: 32),
+      bottomNavigationBar: ColoredBox(
+        color: _colBackgroundBlue,
+        child: SafeArea(
+          top: false,
+          minimum: const EdgeInsets.symmetric(horizontal: 12),
+          child: SizedBox(
+            height: 80,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pushReplacement(
+                      SmoothPageRoute(builder: (_) => const ProfilePage()),
+                    );
+                  },
+                  child: const Icon(Icons.person, color: _colNavItem, size: 32),
+                ),
+
+                GestureDetector(
+                  onTap: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      SmoothPageRoute(builder: (_) => const HomePage()),
+                      (route) => false,
+                    );
+                  },
+                  child: const Icon(Icons.home, color: _colNavItem, size: 32),
+                ),
+
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: _colNavActiveBg,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
                   ),
-  
-                  // 2. Home Icon -> Navigates back to HomePage
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.of(context).pushAndRemoveUntil(
-                        SmoothPageRoute(
-                          builder: (_) => const HomePage(),
-                        ), // <--- Smooth
-                        (route) => false,
-                      );
-                    },
-                    child: const Icon(Icons.home, color: _colNavItem, size: 32),
+                  child: const Icon(
+                    Icons.headphones,
+                    color: _colNavItem,
+                    size: 32,
                   ),
-  
-                  // 3. Headphones Icon (ACTIVE) -> Has Blue Indicator
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: _colNavActiveBg, // Blue background indicator
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 4,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(Icons.headphones, color: _colNavItem, size: 32),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
+      ),
       body: SafeArea(
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // --- 1. THE MAIN MUSIC CARD ---
             Positioned(
               top: _cardTopPosition,
               bottom: 100,
@@ -225,7 +219,6 @@ class _MusicPageState extends State<MusicPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Close Button
                     Align(
                       alignment: Alignment.topRight,
                       child: GestureDetector(
@@ -240,7 +233,6 @@ class _MusicPageState extends State<MusicPage> {
 
                     const SizedBox(height: 30),
 
-                    // Playback Controls
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -338,7 +330,11 @@ class _MusicPageState extends State<MusicPage> {
 
                     _buildActionButton(
                       text: 'upload an audio',
-                      icon: Icon(Icons.file_upload_outlined, color: _colTextGrey, size: 20),
+                      icon: Icon(
+                        Icons.file_upload_outlined,
+                        color: _colTextGrey,
+                        size: 20,
+                      ),
                       bgColor: _colBtnCream,
                       textColor: _colTextGrey,
                       onTap: _pickAudio,
@@ -360,14 +356,14 @@ class _MusicPageState extends State<MusicPage> {
 
                     const SizedBox(height: 12),
 
-                    // "Logged as user" Button
                     ValueListenableBuilder<SpotifySession?>(
                       valueListenable: _spotifyService.session,
                       builder: (BuildContext context, SpotifySession? session, _) {
                         final bool connected = session != null;
-                        final String buttonLabel = connected ? 'open spotify player' : 'connect to spotify';
-                        // Use the Spotify asset for the button in both states.
-                        // When disconnected we render it with reduced opacity to indicate inactive state.
+                        final String buttonLabel = connected
+                            ? 'open spotify player'
+                            : 'connect to spotify';
+
                         final Widget buttonIcon = ImageIcon(
                           const AssetImage('assets/icons/spotify.png'),
                           size: 22,
@@ -375,8 +371,11 @@ class _MusicPageState extends State<MusicPage> {
                               ? _colTextGrey
                               : _colTextGrey.withValues(alpha: 0.5),
                         );
-                        final VoidCallback action = connected ? _openSpotifyPlayer : _connectSpotify;
-                        final bool enabled = connected || Env.hasSpotifyCredentials;
+                        final VoidCallback action = connected
+                            ? _openSpotifyPlayer
+                            : _connectSpotify;
+                        final bool enabled =
+                            connected || Env.hasSpotifyCredentials;
 
                         return Column(
                           children: [
@@ -387,7 +386,9 @@ class _MusicPageState extends State<MusicPage> {
                               textColor: _colTextGrey,
                               onTap: action,
                               isBusy: !connected && _isConnectingSpotify,
-                              enabled: enabled && (!_isConnectingSpotify || connected),
+                              enabled:
+                                  enabled &&
+                                  (!_isConnectingSpotify || connected),
                             ),
                             const SizedBox(height: 8),
                             if (connected)
@@ -419,7 +420,6 @@ class _MusicPageState extends State<MusicPage> {
               ),
             ),
 
-            // --- 2. THE OWL IMAGE ---
             Positioned(
               top: _cardTopPosition + _owlVerticalOffset,
               left: 0,
@@ -437,7 +437,6 @@ class _MusicPageState extends State<MusicPage> {
               ),
             ),
 
-            // --- 3. FLOATING ICONS ---
             Positioned(
               top: 10,
               right: 20,
@@ -610,9 +609,9 @@ class _MusicPageState extends State<MusicPage> {
     if (connected == true) {
       final SpotifySession? session = _spotifyService.session.value;
       final String name = session?.displayName ?? session?.userId ?? 'Spotify';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Connected to $name.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Connected to $name.')));
     }
   }
 
@@ -631,9 +630,7 @@ class _MusicPageState extends State<MusicPage> {
       if (launchedNative) {
         return;
       }
-    } catch (_) {
-      // Native Spotify scheme failed; fall back to web.
-    }
+    } catch (_) {}
 
     try {
       final bool launchedWeb = await launchUrl(
@@ -643,18 +640,14 @@ class _MusicPageState extends State<MusicPage> {
       if (launchedWeb) {
         return;
       }
-    } catch (_) {
-      // Web launch failed; show fallback message.
-    }
+    } catch (_) {}
 
     if (!mounted) {
       return;
     }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Open Spotify to start listening.'),
-      ),
+      const SnackBar(content: Text('Open Spotify to start listening.')),
     );
   }
 
