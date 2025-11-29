@@ -3,12 +3,10 @@ import 'package:flutter/material.dart';
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
-  // --- Color Palette ---
-  // Base background from your other pages
+  //Color Palette
+
   static const Color _colBackgroundBlue = Color(0xFF8AABC7);
-  // The cream/gold color for the Title (matches previous cards/text)
   static const Color _colTitleCream = Color(0xFFF7DB9F);
-  // Overlay color from your Figma snippet (Rectangle 12)
   static const Color _colOverlay = Color(0x40000000); // Black with ~25% alpha
 
   @override
@@ -17,8 +15,7 @@ class AboutPage extends StatelessWidget {
       backgroundColor: _colBackgroundBlue,
       body: Stack(
         children: [
-          // 1. Dark Overlay (Rectangle 12 from Figma)
-          // This darkens the blue background to match the specific About Page design
+          // 1. Overlay
           Container(
             color: _colOverlay,
             width: double.infinity,
@@ -40,7 +37,7 @@ class AboutPage extends StatelessWidget {
                     style: TextStyle(
                       color: _colTitleCream,
                       fontSize: 36,
-                      fontFamily: 'Bungee', // Consistent with other headers
+                      fontFamily: 'Bungee',
                       fontWeight: FontWeight.w400,
                       letterSpacing: 1.5,
                       shadows: [
@@ -56,7 +53,6 @@ class AboutPage extends StatelessWidget {
                   const SizedBox(height: 40),
 
                   // BODY TEXT
-                  // Transcribed from your image
                   const Text(
                     'Sylo is an innovative educational app designed to revolutionize the way you learn and study. Powered by advanced AI, Sylo helps you create concise summaries from any material, generate interactive quizzes to test your knowledge, and organize personalized notes for better retention.\n\n'
                     'Whether you\'re a student preparing for exams or a lifelong learner, Sylo adapts to your needs, making education engaging, efficient, and enjoyable.',
@@ -64,7 +60,7 @@ class AboutPage extends StatelessWidget {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 15,
-                      fontFamily: 'Quicksand', // Consistent with body text
+                      fontFamily: 'Quicksand',
                       height: 1.5,
                       fontWeight: FontWeight.w500,
                     ),
@@ -79,12 +75,9 @@ class AboutPage extends StatelessWidget {
                     },
                     child: Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        // Optional: subtle hit-test area or background if needed
-                      ),
+                      decoration: const BoxDecoration(shape: BoxShape.circle),
                       child: const Icon(
-                        Icons.reply, // Looks like the curved arrow in design
+                        Icons.reply,
                         color: _colTitleCream,
                         size: 48,
                       ),

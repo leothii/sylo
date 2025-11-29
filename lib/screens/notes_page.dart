@@ -9,7 +9,7 @@ import '../widgets/sound_toggle_button.dart';
 import 'profile_page.dart';
 import 'music_page.dart';
 import 'home_page.dart';
-import '../utils/smooth_page.dart'; // <--- Import SmoothPageRoute
+import '../utils/smooth_page.dart';
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -34,7 +34,6 @@ class _NotesPageState extends State<NotesPage> {
   static const Color _colIconGrey = Color(0xFF676767);
   static const Color _colNavItem = Color(0xFFE1B964); // Icon color
 
-  // Unused now, but kept for reference if you need it later
   final NotesService _notesService = NotesService.instance;
   String? _expandedNoteId;
 
@@ -85,11 +84,16 @@ class _NotesPageState extends State<NotesPage> {
                 // 3. Music Icon -> Navigates to MusicPage
                 GestureDetector(
                   onTap: () {
-                    Navigator.of(context).push(
-                      SmoothPageRoute(builder: (_) => const MusicPage()),
-                    ); // <--- Smooth
+                    Navigator.of(
+                      context,
+                    ).push(SmoothPageRoute(builder: (_) => const MusicPage()));
                   },
                   child: Image.asset('assets/icons/headphone.png', width: 32, height: 32),
+                  child: const Icon(
+                    Icons.headphones,
+                    color: _colNavItem,
+                    size: 32,
+                  ),
                 ),
               ],
             ),
@@ -114,7 +118,6 @@ class _NotesPageState extends State<NotesPage> {
                 ),
                 child: Column(
                   children: [
-                    // Header: "MY NOTES" Title + Close Button
                     Padding(
                       padding: const EdgeInsets.fromLTRB(24, 50, 24, 10),
                       child: SizedBox(
@@ -156,7 +159,6 @@ class _NotesPageState extends State<NotesPage> {
                       ),
                     ),
 
-                    // Scrollable List of Notes
                     Expanded(
                       child: ValueListenableBuilder<List<SavedNote>>(
                         valueListenable: _notesService.notes,
@@ -182,7 +184,8 @@ class _NotesPageState extends State<NotesPage> {
                               vertical: 10,
                             ),
                             itemCount: notes.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 16),
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 16),
                             itemBuilder: (BuildContext context, int index) {
                               final SavedNote note = notes[index];
                               return _buildNoteItem(
@@ -200,7 +203,6 @@ class _NotesPageState extends State<NotesPage> {
               ),
             ),
 
-            // --- 2. THE OWL IMAGE (Centered) ---
             Positioned(
               top: _cardTopPosition + _owlVerticalOffset,
               left: 0,
@@ -218,7 +220,6 @@ class _NotesPageState extends State<NotesPage> {
               ),
             ),
 
-            // --- 3. FLOATING ICONS (Top Right) ---
             Positioned(
               top: 10,
               right: 20,
@@ -245,7 +246,6 @@ class _NotesPageState extends State<NotesPage> {
     );
   }
 
-  // Helper widget to build individual note cards
   void _handleNoteTap(String noteId) {
     setState(() {
       _expandedNoteId = _expandedNoteId == noteId ? null : noteId;
@@ -270,7 +270,6 @@ class _NotesPageState extends State<NotesPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Title and Trash Icon
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -289,7 +288,11 @@ class _NotesPageState extends State<NotesPage> {
                 ),
                 IconButton(
                   onPressed: () => _deleteNote(note),
-                  icon: const Icon(Icons.delete_outline, color: _colIconGrey, size: 20),
+                  icon: const Icon(
+                    Icons.delete_outline,
+                    color: _colIconGrey,
+                    size: 20,
+                  ),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   splashRadius: 18,
@@ -313,8 +316,9 @@ class _NotesPageState extends State<NotesPage> {
               duration: const Duration(milliseconds: 200),
               firstCurve: Curves.easeInOut,
               secondCurve: Curves.easeInOut,
-              crossFadeState:
-                  isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+              crossFadeState: isExpanded
+                  ? CrossFadeState.showSecond
+                  : CrossFadeState.showFirst,
               firstChild: Text(
                 note.body,
                 style: const TextStyle(

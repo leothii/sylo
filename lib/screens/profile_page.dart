@@ -101,9 +101,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 GestureDetector(
                   onTap: () {
                     Navigator.of(context).pushAndRemoveUntil(
-                      SmoothPageRoute(
-                        builder: (_) => const HomePage(),
-                      ),
+                      SmoothPageRoute(builder: (_) => const HomePage()),
                       (route) => false,
                     );
                   },
@@ -114,12 +112,15 @@ class _ProfilePageState extends State<ProfilePage> {
                 GestureDetector(
                   onTap: () {
                     Navigator.of(context).pushReplacement(
-                      SmoothPageRoute(
-                        builder: (_) => const MusicPage(),
-                      ),
+                      SmoothPageRoute(builder: (_) => const MusicPage()),
                     );
                   },
                   child: Image.asset('assets/icons/headphone.png', width: 32, height: 32),
+                  child: const Icon(
+                    Icons.headphones,
+                    color: _colNavItem,
+                    size: 32,
+                  ),
                 ),
               ],
             ),
@@ -202,7 +203,11 @@ class _ProfilePageState extends State<ProfilePage> {
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.email_outlined, color: _colIconGrey, size: 22),
+                              const Icon(
+                                Icons.email_outlined,
+                                color: _colIconGrey,
+                                size: 22,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
@@ -276,6 +281,42 @@ class _ProfilePageState extends State<ProfilePage> {
                                         fontFamily: 'Quicksand',
                                         fontWeight: FontWeight.w700,
                                       ),
+                      // Save Button
+                      GestureDetector(
+                        onTap: _isSavingProfile ? null : _saveProfile,
+                        child: Container(
+                          width: 120,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: _colBtnRed,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x3F000000),
+                                blurRadius: 4,
+                                offset: Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: _isSavingProfile
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        _colTitleGold,
+                                      ),
+                                    ),
+                                  )
+                                : const Text(
+                                    'save changes',
+                                    style: TextStyle(
+                                      color: _colTitleGold,
+                                      fontSize: 20,
+                                      fontFamily: 'Quicksand',
+                                      fontWeight: FontWeight.w700,
                                     ),
                             ),
                           ),
@@ -306,6 +347,25 @@ class _ProfilePageState extends State<ProfilePage> {
                                   fontFamily: 'Quicksand',
                                   fontWeight: FontWeight.w600,
                                 ),
+                      GestureDetector(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) =>
+                                const LogoutOverlay(),
+                          );
+                        },
+                        child: Container(
+                          width: 140,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: _colBtnRed,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0x3F000000),
+                                blurRadius: 4,
+                                offset: Offset(0, 4),
                               ),
                             ],
                           ),

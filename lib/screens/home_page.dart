@@ -43,9 +43,8 @@ class _HomePageState extends State<HomePage> {
   bool _hasChattedToday = false;
   bool _showWelcomeBubble = false;
 
-  // --- CONSTANTS FOR LAYOUT FIX ---
-  final double _topPaddingBuffer =
-      130.0; // Space for bubble to be "inside" bounds
+  // CONSTANTS FOR LAYOUT FIX
+  final double _topPaddingBuffer = 130.0;
 
   @override
   void initState() {
@@ -123,17 +122,14 @@ class _HomePageState extends State<HomePage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _buildTopBar(),
-                      // Removed SizedBox(24) here because the card now has built-in top padding
 
-                      // Transform pulls the card UP visually to match original design
-                      // but keeps the touch area valid for the bubble.
                       Transform.translate(
-                        offset: Offset(0, -40), // Fine tune position here
+                        offset: Offset(0, -40),
                         child: _buildWelcomeCard(context),
                       ),
 
                       SizedBox(height: _selectedAttachment != null ? 72 : 32),
-                      // Pull Audio Card up a bit to close the gap left by Transform
+
                       Transform.translate(
                         offset: const Offset(0, -65),
                         child: _buildAudioCard(context),
@@ -254,22 +250,20 @@ class _HomePageState extends State<HomePage> {
   Widget _buildWelcomeCard(BuildContext context) {
     const Color cardColor = Color(0xFFF8EFDC);
 
-    // Shift everything DOWN by _topPaddingBuffer so
-    // 0,0 is actually 130px above the card body
     final double cardTop = 80 + _topPaddingBuffer;
     final double owlTop = -42 + _topPaddingBuffer;
     final double bubbleTop = -115 + _topPaddingBuffer;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
-      // Add buffer to height so container is big enough to hold bubble
+
       height: _welcomeCardHeight() + _topPaddingBuffer,
       curve: Curves.easeInOut,
       child: Stack(
         alignment: Alignment.topCenter,
         clipBehavior: Clip.none,
         children: [
-          // --- CARD BODY ---
+          // CARD BODY
           Positioned(
             top: cardTop, // 210
             left: 0,
@@ -462,7 +456,7 @@ class _HomePageState extends State<HomePage> {
           // --- WELCOME BUBBLE ---
           if (_showWelcomeBubble)
             Positioned(
-              top: bubbleTop, // 15 (Positive value! Clickable!)
+              top: bubbleTop,
               left: 65,
               child: WelcomeBubble(
                 onClose: () {
@@ -490,8 +484,6 @@ class _HomePageState extends State<HomePage> {
     }
     return height;
   }
-
-  // ... (Rest of logic is unchanged) ...
 
   void _openSummary() async {
     final String rawText = _interestController.text.trim();

@@ -11,12 +11,10 @@ class LaunchScreen extends StatelessWidget {
     final User? user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
-      // Logged In -> Go to Home (Streak Preserved)
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const HomePage()),
       );
     } else {
-      // Not Logged In -> Go to Login
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const LoginPage()),
       );
@@ -100,7 +98,7 @@ class LaunchScreen extends StatelessWidget {
                   clipBehavior: Clip.none,
                   alignment: Alignment.center,
                   children: [
-                    // START BUTTON (Now Functional)
+                    // START BUTTON
                     Positioned(
                       bottom: 40,
                       child: Container(
@@ -123,7 +121,7 @@ class LaunchScreen extends StatelessWidget {
                         child: Material(
                           color: Colors.transparent,
                           child: InkWell(
-                            // --- ON TAP LOGIC HERE ---
+                            // ON TAP LOGIC HERE
                             onTap: () => _handleStart(context),
                             borderRadius: BorderRadius.circular(10),
                             child: const Center(
@@ -142,7 +140,7 @@ class LaunchScreen extends StatelessWidget {
                       ),
                     ),
 
-                    // Owl Image (Pointer Ignored so you can click button behind if needed)
+                    // Owl Image
                     Positioned(
                       top: -20,
                       left: 0,
