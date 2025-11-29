@@ -274,6 +274,44 @@ class _QuizPageState extends State<QuizPage> {
       backgroundColor: _colBackgroundBlue,
 
       // --- BOTTOM NAV ---
+        bottomNavigationBar: ColoredBox(
+          color: _colBackgroundBlue,
+          child: SafeArea(
+            top: false,
+            minimum: const EdgeInsets.symmetric(horizontal: 12),
+            child: SizedBox(
+              height: 80,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        SmoothPageRoute(builder: (_) => const ProfilePage()),
+                      );
+                    },
+                    child: Image.asset('assets/icons/profile.png', width: 32, height: 32),
+                  ),
+
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        SmoothPageRoute(
+                          builder: (_) => const HomePage(),
+                        ),
+                        (route) => false,
+                      );
+                    },
+                    child: Image.asset('assets/icons/home.png', width: 32, height: 32),
+                  ),
+
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        SmoothPageRoute(builder: (_) => const MusicPage()),
+                      );
+                    },
+                    child: Image.asset('assets/icons/headphone.png', width: 32, height: 32),
       bottomNavigationBar: ColoredBox(
         color: _colBackgroundBlue,
         child: SafeArea(

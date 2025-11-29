@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -58,13 +59,25 @@ class NotesService {
   NotesService._();
 
   static final NotesService instance = NotesService._();
-  static const String _prefsKey = 'notes.saved.v1';
+
+  String get _prefsKey {
+    final String userId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
+    return 'notes.saved.v1.$userId';
+  }
 
   final ValueNotifier<List<SavedNote>> notes = ValueNotifier<List<SavedNote>>(<SavedNote>[]);
 
   bool _loaded = false;
+  String? _lastUserId;
 
   Future<void> ensureLoaded() async {
+    final String currentUserId = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
+    if (_lastUserId != currentUserId) {
+      _loaded = false;
+      _lastUserId = currentUserId;
+      notes.value = <SavedNote>[];
+    }
+
     if (_loaded) {
       return;
     }

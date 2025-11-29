@@ -137,6 +137,57 @@ class _MusicPageState extends State<MusicPage> {
     return Scaffold(
       backgroundColor: _colBackgroundBlue,
       // Bottom Navigation Bar
+        bottomNavigationBar: ColoredBox(
+          color: _colBackgroundBlue,
+          child: SafeArea(
+            top: false,
+            minimum: const EdgeInsets.symmetric(horizontal: 12),
+            child: SizedBox(
+              height: 80,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // 1. Profile Icon -> Navigates to ProfilePage
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pushReplacement(
+                        SmoothPageRoute(
+                          builder: (_) => const ProfilePage(),
+                        ), // <--- Smooth
+                      );
+                    },
+                    child: Image.asset('assets/icons/profile.png', width: 32, height: 32),
+                  ),
+  
+                  // 2. Home Icon -> Navigates back to HomePage
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).pushAndRemoveUntil(
+                        SmoothPageRoute(
+                          builder: (_) => const HomePage(),
+                        ), // <--- Smooth
+                        (route) => false,
+                      );
+                    },
+                    child: Image.asset('assets/icons/home.png', width: 32, height: 32),
+                  ),
+  
+                  // 3. Headphones Icon (ACTIVE) -> Has Blue Indicator
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: _colNavActiveBg, // Blue background indicator
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Image.asset('assets/icons/headphone.png', width: 24, height: 24),
       bottomNavigationBar: ColoredBox(
         color: _colBackgroundBlue,
         child: SafeArea(
